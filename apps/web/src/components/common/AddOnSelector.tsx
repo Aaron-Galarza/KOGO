@@ -27,8 +27,8 @@ export function AddOnSelector({
             className={cn(
               'rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-all duration-200',
               isSelected
-                ? 'border-[#D9383A] bg-[#D9383A] text-white'
-                : 'border-[#e0e0e0] bg-white text-[#757575] hover:border-[#D9383A]'
+                ? 'border-[#D95A2B] bg-[#D95A2B] text-white'
+                : 'border-[#e0e0e0] bg-white text-[#757575] hover:border-[#D95A2B]'
             )}
           >
             {addon.name || (addon as any).title}

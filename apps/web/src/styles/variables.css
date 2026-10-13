@@ -1,7 +1,16 @@
 :root {
-  --color-primary-red: #D9383A;
-  --color-accent-yellow: #F9A825;
+  /* ── Paleta KOGO ─────────────────────────────── */
+  --color-cream: #F2EEE9;      /* fondo base */
+  --color-primary: #D95A2B;    /* naranja principal */
+  --color-primary-dark: #D94B2B; /* rojo-naranja (hover / énfasis) */
+  --color-secondary: #D98162;  /* terracota medio */
+  --color-light: #F2B6A0;      /* salmón claro (acentos) */
+
+  /* ── Aliases usados en globals.css / utilidades ─ */
+  --color-primary-red: var(--color-primary);
+  --color-accent-yellow: var(--color-light);
+  --color-bg-cream: var(--color-cream);
   --color-text-dark: #212121;
-  --color-bg-cream: #FFF9EE;
+
   --radius-full: 9999px;
 }

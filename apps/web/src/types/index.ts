@@ -133,9 +133,13 @@ export interface StoreConfig {
   pricePerKm?: number;
 }
 
+export interface DayRange {
+  open: string;
+  close: string;
+}
+
 export interface DaySchedule {
   day: string;
-  openTime: string;
-  closeTime: string;
   isStoreOpen: boolean;
+  ranges: DayRange[];
 }

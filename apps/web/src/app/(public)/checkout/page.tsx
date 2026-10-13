@@ -21,10 +21,10 @@ export default function CheckoutPage() {
     return (
       <div className="cart-bg flex min-h-[60vh] flex-col items-center justify-center p-4">
         <div className="text-center">
-          <h1 className="mb-2 font-[var(--font-montserrat)] text-3xl font-extrabold text-[#D9383A]">
+          <h1 className="mb-2 font-[var(--font-montserrat)] text-3xl font-extrabold text-[#D95A2B]">
             <ShoppingCart className="mr-2 inline-block h-8 w-8" />Tu carrito esta vacio
           </h1>
-          <Link href="/menu" className="inline-block rounded-xl bg-[#D9383A] px-8 py-3 font-bold text-white hover:bg-[#b52d2f]">Ver menu</Link>
+          <Link href="/menu" className="inline-block rounded-xl bg-[#D95A2B] px-8 py-3 font-bold text-white hover:bg-[#D94B2B]">Ver menu</Link>
         </div>
       </div>
     );
@@ -32,7 +32,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="cart-bg min-h-screen p-4 pb-32 max-w-2xl mx-auto">
-      <Link href="/cart" className="text-[#D9383A] hover:text-[#b52d2f] font-semibold text-sm mb-3 inline-block">
+      <Link href="/cart" className="text-[#D95A2B] hover:text-[#D94B2B] font-semibold text-sm mb-3 inline-block">
         Volver al carrito
       </Link>
       <h1 className="text-3xl font-bold text-[#212121] font-[var(--font-montserrat)] mb-6">Checkout</h1>
@@ -67,7 +67,7 @@ export default function CheckoutPage() {
                 <span>Descuento</span><span>-{formatCurrency(getDiscount())}</span>
               </div>
             )}
-            <div className="flex justify-between text-lg font-bold text-[#D9383A]">
+            <div className="flex justify-between text-lg font-bold text-[#D95A2B]">
               <span>Total</span><span>{formatCurrency(getTotal())}</span>
             </div>
           </div>

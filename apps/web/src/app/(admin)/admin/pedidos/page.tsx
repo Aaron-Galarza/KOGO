@@ -31,7 +31,7 @@ export default function PedidosPage() {
           {STATUSES.map((s) => (
             <button key={s || 'all'} onClick={() => setStatus(s)}
               className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
-                status === s ? 'bg-[#D9383A] text-white' : 'bg-white border border-gray-300 text-[#757575] hover:bg-gray-50'}`}>
+                status === s ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-300 text-[#757575] hover:bg-gray-50'}`}>
               {LABELS[s]}
             </button>
           ))}
@@ -40,7 +40,7 @@ export default function PedidosPage() {
           {RANGES.map((r) => (
             <button key={r} onClick={() => setRange(r)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                range === r ? 'bg-[#D9383A] text-white' : 'bg-white border border-gray-300 text-[#757575] hover:bg-gray-50'}`}>
+                range === r ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-300 text-[#757575] hover:bg-gray-50'}`}>
               {RANGE_LABELS[r]}
             </button>
           ))}

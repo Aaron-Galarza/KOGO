@@ -15,12 +15,22 @@ export interface IOrderItemAddon {
   quantity: number;
 }
 
+export interface IOrderItemOption {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionName: string;
+  price: number;
+  quantity: number;
+}
+
 export interface IOrderItem {
   productId: string;
   title: string;
   price: number;
   quantity: number;
   additionals: IOrderItemAddon[];
+  options: IOrderItemOption[];
 }
 
 export interface IOrder extends Document {
@@ -51,12 +61,22 @@ const OrderItemAddonSchema = new Schema<IOrderItemAddon>({
   quantity: { type: Number, required: true, min: 1 },
 }, { _id: false });
 
+const OrderItemOptionSchema = new Schema<IOrderItemOption>({
+  groupId: { type: String, required: true },
+  groupName: { type: String, required: true },
+  optionId: { type: String, required: true },
+  optionName: { type: String, required: true },
+  price: { type: Number, required: true, min: 0 },
+  quantity: { type: Number, required: true, min: 1 },
+}, { _id: false });
+
 const OrderItemSchema = new Schema<IOrderItem>({
   productId: { type: String, required: true },
   title: { type: String, required: true },
   price: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1 },
   additionals: { type: [OrderItemAddonSchema], default: [] },
+  options: { type: [OrderItemOptionSchema], default: [] },
 }, { _id: false });
 
 const orderSchema = new Schema<IOrder>(

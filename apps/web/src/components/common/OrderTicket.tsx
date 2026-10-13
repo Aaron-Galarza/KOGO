@@ -12,8 +12,8 @@ export function OrderTicket({ order }: OrderTicketProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto print:shadow-none print:p-0">
-      <div className="text-center mb-6 border-b-4 border-[#D9383A] pb-4">
-        <h1 className="text-3xl font-extrabold text-[#D9383A] font-[var(--font-montserrat)]">CHEEPERS</h1>
+      <div className="text-center mb-6 border-b-4 border-[#D95A2B] pb-4">
+        <h1 className="text-3xl font-extrabold text-[#D95A2B] font-[var(--font-montserrat)]">KOGO</h1>
         <p className="text-[#757575] text-lg font-semibold">Pedido Confirmado</p>
       </div>
 
@@ -46,7 +46,7 @@ export function OrderTicket({ order }: OrderTicketProps) {
         </div>
       </div>
 
-      <div className="space-y-1 mb-4 pb-4 border-b-4 border-[#D9383A] text-sm">
+      <div className="space-y-1 mb-4 pb-4 border-b-4 border-[#D95A2B] text-sm">
         <div className="flex justify-between text-[#757575]">
           <span>Subtotal:</span><span className="font-semibold">{formatCurrency(order.subtotal)}</span>
         </div>
@@ -60,7 +60,7 @@ export function OrderTicket({ order }: OrderTicketProps) {
             <span>Envio:</span><span className="font-semibold">{formatCurrency(order.deliveryCost)}</span>
           </div>
         )}
-        <div className="flex justify-between text-lg font-bold text-[#D9383A] pt-2">
+        <div className="flex justify-between text-lg font-bold text-[#D95A2B] pt-2">
           <span>TOTAL:</span><span>{formatCurrency(order.total)}</span>
         </div>
       </div>

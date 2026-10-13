@@ -72,14 +72,14 @@ export function CartItem({
           <div className="mt-1 flex items-center gap-2">
             <span className="text-xs text-[#757575] font-[var(--font-open-sans)]">Cantidad:</span>
             <div className="flex items-center gap-1">
-              <button onClick={() => onDecrement(item.cartItemId)} aria-label="Disminuir cantidad" className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e0e0e0] text-sm font-bold text-[#757575] transition hover:border-[#D9383A] hover:text-[#D9383A]">-</button>
+              <button onClick={() => onDecrement(item.cartItemId)} aria-label="Disminuir cantidad" className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e0e0e0] text-sm font-bold text-[#757575] transition hover:border-[#D95A2B] hover:text-[#D95A2B]">-</button>
               <span className="w-6 text-center text-sm font-bold text-[#212121]">{item.quantity}</span>
               <button
                 onClick={() => onIncrement(item.addOns)}
                 disabled={atMaxStock}
                 aria-label={atMaxStock ? 'Stock máximo alcanzado' : 'Incrementar cantidad'}
                 className={`flex h-7 w-7 items-center justify-center rounded-full border border-[#e0e0e0] text-sm font-bold transition ${
-                  atMaxStock ? 'cursor-not-allowed text-gray-300' : 'text-[#757575] hover:border-[#D9383A] hover:text-[#D9383A]'
+                  atMaxStock ? 'cursor-not-allowed text-gray-300' : 'text-[#757575] hover:border-[#D95A2B] hover:text-[#D95A2B]'
                 }`}>+</button>
             </div>
           </div>
@@ -97,7 +97,7 @@ export function CartItem({
 
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-bold text-[#212121] font-[var(--font-open-sans)]">Subtotal: {formatCurrency(subtotal)}</p>
-            <button onClick={() => onRemove(item.cartItemId)} className="flex items-center gap-1 rounded-full border border-[#D9383A] px-3 py-1 text-xs font-semibold text-[#D9383A] transition hover:bg-[#D9383A] hover:text-white">
+            <button onClick={() => onRemove(item.cartItemId)} className="flex items-center gap-1 rounded-full border border-[#D95A2B] px-3 py-1 text-xs font-semibold text-[#D95A2B] transition hover:bg-[#D95A2B] hover:text-white">
               <Trash2 size={12} /> Eliminar
             </button>
           </div>

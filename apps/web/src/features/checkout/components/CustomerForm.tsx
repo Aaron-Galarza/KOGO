@@ -79,7 +79,7 @@ export function CustomerForm({ onSubmit, loading, error }: CustomerFormProps) {
         </div>
       )}
       <button type="submit" disabled={loading}
-        className="w-full mt-4 bg-[#D9383A] text-white py-3 rounded-full font-bold hover:bg-[#b52d2f] disabled:bg-gray-400 active:scale-95 transition">
+        className="w-full mt-4 bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 active:scale-95 transition">
         {loading ? 'Procesando...' : 'Confirmar pedido'}
       </button>
     </form>

@@ -64,7 +64,7 @@ export function POSCart({ onCheckout }: POSCartProps) {
                         <span className="text-[10px] md:text-xs font-bold w-4 md:w-5 text-center">{item.quantity || 1}</span>
                         <button onClick={() => updateQuantity(id, (item.quantity || 1) + 1)} disabled={atMaxStock} className={`w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-xs hover:bg-gray-300 ${atMaxStock ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-200 text-gray-700'}`}><Plus size={10} /></button>
                       </div>
-                      <span className="text-[10px] md:text-xs font-bold text-[#D9383A]">{formatCurrency(item.price * (item.quantity || 1))}</span>
+                      <span className="text-[10px] md:text-xs font-bold text-[#D95A2B]">{formatCurrency(item.price * (item.quantity || 1))}</span>
                     </div>
                     {(item.addOns || []).length > 0 && (
                       <p className="text-[9px] md:text-[10px] text-[#757575] mt-0.5 truncate">{(item.addOns || []).map((a: any) => a.name + (a.quantity > 1 ? ` x${a.quantity}` : '')).join(', ')}</p>
@@ -76,7 +76,7 @@ export function POSCart({ onCheckout }: POSCartProps) {
                         {isExpanded ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
                       </button>
                     )}
-                    <button onClick={() => removeItem(id)} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center bg-[#D9383A] text-white rounded text-[10px] md:text-xs hover:bg-[#b52d2f]"><Trash2 size={10} /></button>
+                    <button onClick={() => removeItem(id)} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center bg-[#D95A2B] text-white rounded text-[10px] md:text-xs hover:bg-[#D94B2B]"><Trash2 size={10} /></button>
                   </div>
                 </div>
                 {isExpanded && available.length > 0 && (
@@ -85,9 +85,9 @@ export function POSCart({ onCheckout }: POSCartProps) {
                       const sel = (item.addOns || []).some((x: any) => x._id === a._id);
                       return (
                         <button key={a._id} onClick={() => toggleAddon(id, a)}
-                          className={`text-left p-1.5 rounded text-[10px] font-medium transition ${sel ? 'bg-[#D9383A] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:border-[#D9383A]'}`}>
+                          className={`text-left p-1.5 rounded text-[10px] font-medium transition ${sel ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:border-[#D95A2B]'}`}>
                           <div className="truncate">{a.name || (a as any).title}</div>
-                          <div className={sel ? 'text-white/70' : 'text-[#D9383A]'}>+{formatCurrency(a.price)}</div>
+                          <div className={sel ? 'text-white/70' : 'text-[#D95A2B]'}>+{formatCurrency(a.price)}</div>
                         </button>
                       );
                     })}
@@ -98,10 +98,10 @@ export function POSCart({ onCheckout }: POSCartProps) {
           })
         )}
       </div>
-      <div className="border-t pt-2 mb-2 md:mb-3 flex-shrink-0"><div className="flex justify-between font-bold text-base md:text-lg"><span>Total:</span><span className="text-[#D9383A]">{formatCurrency(subtotal)}</span></div></div>
+      <div className="border-t pt-2 mb-2 md:mb-3 flex-shrink-0"><div className="flex justify-between font-bold text-base md:text-lg"><span>Total:</span><span className="text-[#D95A2B]">{formatCurrency(subtotal)}</span></div></div>
       <div className="flex gap-2 flex-shrink-0">
         <button onClick={clearCart} disabled={items.length === 0} className="flex-1 px-3 md:px-4 py-1.5 md:py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 disabled:bg-gray-300 text-xs md:text-sm font-semibold">Limpiar</button>
-        <button onClick={onCheckout} disabled={items.length === 0} className="flex-1 px-3 md:px-4 py-1.5 md:py-2 bg-[#D9383A] text-white rounded-lg hover:bg-[#b52d2f] disabled:bg-gray-300 text-xs md:text-sm font-bold">Checkout</button>
+        <button onClick={onCheckout} disabled={items.length === 0} className="flex-1 px-3 md:px-4 py-1.5 md:py-2 bg-[#D95A2B] text-white rounded-lg hover:bg-[#D94B2B] disabled:bg-gray-300 text-xs md:text-sm font-bold">Checkout</button>
       </div>
     </div>
   );

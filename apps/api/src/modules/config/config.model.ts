@@ -1,11 +1,15 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { DEFAULT_DAILY_SCHEDULE } from '../../constants';
 
+export interface IDayRange {
+  open: string;
+  close: string;
+}
+
 export interface IDaySchedule {
   day: string;
-  openTime: string;
-  closeTime: string;
   isStoreOpen: boolean;
+  ranges: IDayRange[];
 }
 
 export interface IConfig extends Document {
@@ -23,12 +27,19 @@ interface IConfigModel extends Model<IConfig> {
   getOrCreateConfig(): Promise<IConfig>;
 }
 
+const dayRangeSchema = new Schema<IDayRange>(
+  {
+    open: { type: String, required: true },
+    close: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const dayScheduleSchema = new Schema<IDaySchedule>(
   {
     day: { type: String, required: true },
-    openTime: { type: String, required: true },
-    closeTime: { type: String, required: true },
     isStoreOpen: { type: Boolean, required: true },
+    ranges: { type: [dayRangeSchema], default: [] },
   },
   { _id: false }
 );

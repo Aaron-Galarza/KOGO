@@ -116,14 +116,14 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
 
               <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
                 <button type="button" onClick={() => { setUseCoupon(!useCoupon); setCouponCode(''); setCouponMsg(null); setAppliedCoupon(null); }}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${useCoupon ? 'bg-[#D9383A] text-white' : 'bg-gray-100 text-[#757575]'}`}>
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${useCoupon ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 text-[#757575]'}`}>
                   <Ticket size={14} /> Cupon? {useCoupon ? 'Si' : 'No'}
                 </button>
                 {useCoupon && (
                   <div className="flex gap-1 flex-1">
                     <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                      placeholder="Codigo" className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-xs font-mono uppercase focus:outline-none focus:border-[#D9383A]" maxLength={20} />
-                    <button type="button" onClick={applyCoupon} className="px-3 py-2 bg-[#D9383A] text-white rounded-lg text-xs font-semibold hover:bg-[#b52d2f]">Aplicar</button>
+                      placeholder="Codigo" className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-xs font-mono uppercase focus:outline-none focus:border-[#D95A2B]" maxLength={20} />
+                    <button type="button" onClick={applyCoupon} className="px-3 py-2 bg-[#D95A2B] text-white rounded-lg text-xs font-semibold hover:bg-[#D94B2B]">Aplicar</button>
                   </div>
                 )}
               </div>
@@ -133,11 +133,11 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
 
               <div className="space-y-3">
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                  placeholder="Nombre del cliente" className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+                  placeholder="Nombre del cliente" className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Telefono" className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+                  placeholder="Telefono" className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
                 <button onClick={createOrder} disabled={loading || !name.trim()}
-                  className="w-full py-3 bg-[#D9383A] text-white rounded-xl font-bold hover:bg-[#b52d2f] disabled:bg-gray-400 transition text-lg flex items-center justify-center gap-2">
+                  className="w-full py-3 bg-[#D95A2B] text-white rounded-xl font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 transition text-lg flex items-center justify-center gap-2">
                   <Printer size={20} /> {loading ? 'Creando...' : 'Crear pedido + Imprimir'}
                 </button>
               </div>

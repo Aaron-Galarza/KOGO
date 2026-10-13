@@ -26,9 +26,11 @@ export default async function HomePage() {
       <div className="mx-auto max-w-[1200px] px-4 pt-2 pb-1">
         <StoreStatus config={config} />
       </div>
-      <HeroSection slides={slides} />
-      <AboutSection />
-      <CTASection />
+      <div className="px-3 sm:px-5">
+        <HeroSection slides={slides} />
+        <AboutSection config={config} />
+        <CTASection />
+      </div>
     </div>
   );
 }

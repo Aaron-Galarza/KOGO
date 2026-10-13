@@ -7,7 +7,7 @@ export function CTASection({ className = '' }: { className?: string }) {
     <section
       className={cn('mx-auto mb-20 max-w-[1200px] px-4 text-center', className)}
     >
-      <div className="rounded-3xl bg-[#c53030] px-8 py-16 text-white shadow-[0_10px_15px_rgba(197,48,48,0.3)]">
+      <div className="rounded-3xl bg-[#D94B2B] px-8 py-16 text-white shadow-[0_10px_15px_rgba(217,90,43,0.3)]">
         <h2 className="mb-4 font-['Montserrat'] text-[2.5em] font-extrabold max-md:text-[1.8em]">
           ¿Listo para pedir?
         </h2>
@@ -17,7 +17,7 @@ export function CTASection({ className = '' }: { className?: string }) {
         <div className="flex flex-wrap justify-center gap-4">
           <a
             href="/menu"
-            className="inline-block rounded-full border-2 border-white bg-transparent px-8 py-4 font-['Montserrat'] text-lg font-bold uppercase text-white transition-all duration-300 hover:-translate-y-[2px] hover:bg-white hover:text-[#c53030]"
+            className="inline-block rounded-full border-2 border-white bg-transparent px-8 py-4 font-['Montserrat'] text-lg font-bold uppercase text-white transition-all duration-300 hover:-translate-y-[2px] hover:bg-white hover:text-[#D94B2B]"
           >
             Ver Menú
           </a>
@@ -25,7 +25,7 @@ export function CTASection({ className = '' }: { className?: string }) {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-transparent px-8 py-4 font-['Montserrat'] text-lg font-bold uppercase text-white transition-all duration-300 hover:-translate-y-[2px] hover:bg-white hover:text-[#c53030]"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-transparent px-8 py-4 font-['Montserrat'] text-lg font-bold uppercase text-white transition-all duration-300 hover:-translate-y-[2px] hover:bg-white hover:text-[#D94B2B]"
           >
             <WhatsappIcon className="h-5 w-5" />
             WhatsApp

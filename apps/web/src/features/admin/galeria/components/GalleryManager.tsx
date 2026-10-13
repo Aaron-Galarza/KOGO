@@ -69,12 +69,12 @@ export function GalleryManager() {
       <form onSubmit={submit} className="space-y-3 mb-6 border-b pb-6">
         <h3 className="font-semibold text-[#212121] flex items-center gap-2"><Upload size={14} /> Subir nueva imagen</h3>
         <input type="file" ref={fileRef} onChange={handleFile} accept="image/jpeg,image/png,image/webp,image/gif" required disabled={uploading}
-          className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#D9383A]" />
+          className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#D95A2B]" />
         {previewUrl && <div className="h-24 bg-gray-100 rounded-lg overflow-hidden"><img src={previewUrl} alt="Preview" className="h-full w-full object-cover" loading="lazy" /></div>}
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required disabled={uploading}
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D9383A]" />
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B]" />
         <button type="submit" disabled={uploading || !selectedFile}
-          className="px-6 py-2 bg-[#D9383A] text-white rounded-lg font-semibold hover:bg-[#b52d2f] disabled:bg-gray-400 transition text-sm">
+          className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-semibold hover:bg-[#D94B2B] disabled:bg-gray-400 transition text-sm">
           {uploading ? 'Subiendo...' : 'Subir'}
         </button>
       </form>
@@ -83,7 +83,7 @@ export function GalleryManager() {
       <div className="relative mb-4">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#757575]" />
         <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-          placeholder="Buscar por nombre..." className="w-full pl-9 pr-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D9383A]" />
+          placeholder="Buscar por nombre..." className="w-full pl-9 pr-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B]" />
       </div>
 
       {paged.length === 0 ? <p className="text-[#757575] text-sm">No hay imagenes</p> : (

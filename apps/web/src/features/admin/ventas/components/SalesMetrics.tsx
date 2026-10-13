@@ -47,7 +47,7 @@ export function SalesMetrics({ range, customFrom, customTo }: SalesMetricsProps)
       {cards.map(({ label, value, Icon }) => (
         <div key={label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 hover:shadow-md transition">
           <div className="flex items-center gap-2 mb-2">
-            <Icon size={18} className="text-[#D9383A]" />
+            <Icon size={18} className="text-[#D95A2B]" />
             <p className="text-xs sm:text-sm font-medium text-[#757575]">{label}</p>
           </div>
           <p className="text-xl sm:text-2xl font-bold text-[#212121] truncate">{value}</p>

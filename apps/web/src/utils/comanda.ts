@@ -26,7 +26,7 @@ export function printComanda(order: Order, shippingCost?: number, discount?: num
     .sep{border-top:1px dashed #000;margin:10px 0}
     .details p{margin:5px 0;font-size:1.1em;font-weight:bold}
     </style></head><body><div class="ticket">
-    <div style="text-align:center"><h3>CHEEPERS</h3></div>
+    <div style="text-align:center"><h3>KOGO</h3></div>
     <div class="sep"></div>
     <div class="details">
       <p><strong>Fecha:</strong> ${date} | <strong>Hora:</strong> ${time}</p>

@@ -26,7 +26,7 @@ export const POSProductCard = memo(function POSProductCard({ product, onSelect }
       </div>
       <div className="flex min-h-[60px] flex-col justify-between rounded-b-lg p-2">
         <h3 className="line-clamp-2 text-[11px] font-bold leading-tight text-[#212121]">{title}</h3>
-        <p className="text-[13px] font-extrabold text-[#D9383A]">{formatCurrency(product.price)}</p>
+        <p className="text-[13px] font-extrabold text-[#D95A2B]">{formatCurrency(product.price)}</p>
       </div>
       {isOutOfStock && (
         <span className="absolute inset-x-0 top-0 flex items-center justify-center gap-1 rounded-t-lg bg-black/60 py-1 text-[10px] font-bold text-white">

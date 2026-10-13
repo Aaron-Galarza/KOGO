@@ -3,11 +3,15 @@ import { WEEKDAY_NAMES } from '../../constants';
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+export const DayRangeSchema = z.object({
+  open: z.string().regex(TIME_REGEX, 'Formato de hora inválido (HH:MM)'),
+  close: z.string().regex(TIME_REGEX, 'Formato de hora inválido (HH:MM)'),
+});
+
 export const DayScheduleSchema = z.object({
   day: z.enum(WEEKDAY_NAMES, { error: 'Día inválido' }),
-  openTime: z.string().regex(TIME_REGEX, 'Formato de hora inválido (HH:MM)'),
-  closeTime: z.string().regex(TIME_REGEX, 'Formato de hora inválido (HH:MM)'),
   isStoreOpen: z.boolean(),
+  ranges: z.array(DayRangeSchema).default([]),
 });
 
 export const UpdateScheduleSchema = z.object({

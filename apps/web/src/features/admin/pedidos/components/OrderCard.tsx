@@ -15,12 +15,12 @@ function formatWhatsApp(phone: string, order: Order): string {
     return `- ${i.title}${i.quantity > 1 ? ` x${i.quantity}` : ''}${hasAdds ? ' %2Badicionales' : ''}`;
   }).join('%0A');
   const total = `$${order.total?.toLocaleString('es-AR')}`;
-  const msg = `Hola ${order.customer.name}!%0A%0ATu pedido en CHEEPERS:%0A%0A${items}%0A%0ATotal: ${total}%0AEstado: En preparacion%0A%0ARecibimos tu pedido, algun detalle mas que desees agregar?`;
+  const msg = `Hola ${order.customer.name}!%0A%0ATu pedido en KOGO:%0A%0A${items}%0A%0ATotal: ${total}%0AEstado: En preparacion%0A%0ARecibimos tu pedido, algun detalle mas que desees agregar?`;
   return `https://wa.me/${base}?text=${msg}`;
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'text-[#D9383A]',
+  pending: 'text-[#D95A2B]',
   'preparing': 'text-yellow-600',
   ready: 'text-blue-600',
   delivered: 'text-green-600',
@@ -91,7 +91,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
         <span className="flex items-center gap-2">
           <span className="flex items-center gap-1"><Calendar size={14} /> {order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-AR') + ' ' + new Date(order.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
           {isToday && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#D9383A] text-white">HOY</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#D95A2B] text-white">HOY</span>
           )}
         </span>
         <span className="flex items-center gap-1"><User size={14} /> {order.customer.name}</span>
@@ -118,7 +118,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
                 <div className="ml-2 mt-0.5">
                   {item.additionals.map((a, j) => (
                     <p key={j} className="text-sm text-[#757575] font-medium">
-                      &#8627; {a.name} <span className="text-[10px] text-[#D9383A]">- {formatCurrency(a.price)}</span>
+                      &#8627; {a.name} <span className="text-[10px] text-[#D95A2B]">- {formatCurrency(a.price)}</span>
                     </p>
                   ))}
                 </div>
@@ -159,7 +159,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
               value={order.status}
               onChange={(e) => handleStatusChange(e.target.value)}
               disabled={isUpdating}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D9383A] bg-white disabled:opacity-50 disabled:cursor-wait"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B] bg-white disabled:opacity-50 disabled:cursor-wait"
             >
               {isUpdating && <option value="">Actualizando...</option>}
               {ALL_STATUSES.map((s) => (
@@ -193,12 +193,12 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
               <p className="text-sm text-[#757575] mb-4">Ingresa el costo de envio para {order.customer.name}</p>
               <input type="number" value={shippingCost} onChange={(e) => setShippingCost(e.target.value)}
                 placeholder="0" min={0} step="0.01" autoFocus
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#D9383A] mb-4" />
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#D95A2B] mb-4" />
               <div className="flex gap-2">
                 <button onClick={() => { setShowShipping(false); setShippingCost(''); }}
                   className="flex-1 px-4 py-2 bg-gray-300 text-[#212121] rounded-lg font-semibold hover:bg-gray-400">Cancelar</button>
                 <button onClick={handleShippingSubmit}
-                  className="flex-1 px-4 py-2 bg-[#D9383A] text-white rounded-lg font-semibold hover:bg-[#b52d2f]">Imprimir</button>
+                  className="flex-1 px-4 py-2 bg-[#D95A2B] text-white rounded-lg font-semibold hover:bg-[#D94B2B]">Imprimir</button>
               </div>
             </div>
           </div>

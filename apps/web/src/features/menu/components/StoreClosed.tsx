@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
-import type { StoreConfig, DaySchedule } from '@/types';
+import type { StoreConfig, DaySchedule, DayRange } from '@/types';
 
 function formatHour(time?: string): string | null {
   if (!time) return null;
@@ -10,12 +10,26 @@ function formatHour(time?: string): string | null {
   return `${h.padStart(2, '0')}:${(m ?? '00').padStart(2, '0')}`;
 }
 
-function scheduleHours(todaySchedule?: DaySchedule): string | null {
-  if (!todaySchedule?.isStoreOpen) return null;
-  const open = formatHour(todaySchedule.openTime);
-  const close = formatHour(todaySchedule.closeTime);
+function formatRange(range: DayRange): string | null {
+  const open = formatHour(range.open);
+  const close = formatHour(range.close);
   if (!open || !close) return null;
-  return `de ${open} a ${close} hs`;
+  return `de ${open} a ${close}`;
+}
+
+function scheduleHours(todaySchedule?: DaySchedule): string | null {
+  if (!todaySchedule?.isStoreOpen || !todaySchedule.ranges?.length) return null;
+  const ranges = todaySchedule.ranges.map(formatRange).filter(Boolean);
+  return ranges.length ? `${ranges.join(' y ')} hs` : null;
+}
+
+function isWithinRange(currentMinutes: number, range: DayRange): boolean {
+  const [oh, om] = range.open.split(':').map(Number);
+  const [ch, cm] = range.close.split(':').map(Number);
+  const openMin = oh * 60 + om;
+  let closeMin = ch * 60 + cm;
+  if (closeMin <= openMin) closeMin += 24 * 60;
+  return currentMinutes >= openMin && currentMinutes <= closeMin;
 }
 
 export function StoreStatus({ config }: { config: StoreConfig | null }) {
@@ -32,13 +46,8 @@ export function StoreStatus({ config }: { config: StoreConfig | null }) {
   const todaySchedule = config.dailySchedule?.find((d) => d.day === today);
 
   let isClosedBySchedule = true;
-  if (todaySchedule?.isStoreOpen) {
-    const [oh, om] = todaySchedule.openTime.split(':').map(Number);
-    const [ch, cm] = todaySchedule.closeTime.split(':').map(Number);
-    const openMin = oh * 60 + om;
-    let closeMin = ch * 60 + cm;
-    if (closeMin <= openMin) closeMin += 24 * 60;
-    isClosedBySchedule = currentMinutes < openMin || currentMinutes > closeMin;
+  if (todaySchedule?.isStoreOpen && todaySchedule.ranges?.length) {
+    isClosedBySchedule = !todaySchedule.ranges.some((range) => isWithinRange(currentMinutes, range));
   }
   const isClosed = !config.isOpen || config.isEmergencyClosed || isClosedBySchedule;
   const hours = scheduleHours(todaySchedule);

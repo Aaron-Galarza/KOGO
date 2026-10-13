@@ -60,9 +60,9 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-[#D9383A] transition w-full"
+        className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-[#D95A2B] transition w-full"
       >
-        <IconDisplay name={value} size={18} className="text-[#D9383A]" />
+        <IconDisplay name={value} size={18} className="text-[#D95A2B]" />
         <span className="text-sm text-[#757575]">{value || 'Seleccionar icono'}</span>
       </button>
 
@@ -74,7 +74,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
               type="button"
               onClick={() => { onChange(name); setOpen(false); }}
               className={`p-2 rounded-lg transition flex items-center justify-center ${
-                value === name ? 'bg-[#D9383A] text-white' : 'bg-gray-100 hover:bg-gray-200 text-[#757575]'
+                value === name ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 hover:bg-gray-200 text-[#757575]'
               }`}
               title={name}
             >

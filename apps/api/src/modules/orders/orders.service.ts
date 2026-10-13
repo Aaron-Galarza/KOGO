@@ -5,6 +5,7 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { ProductModel } from '../products/products.model';
 import { CategoriaModel } from '../categories/categories.model';
 import { AdicionalModel } from '../additionals/additionals.model';
+import { validateProductConfiguration } from '../products/productOptions.service';
 import { CreateOrderInput } from './orders.schema';
 import { AppError } from '../../utils/appError';
 import { ORDER_STATUSES, OrderStatus } from '../../constants';
@@ -62,7 +63,12 @@ export const OrdersService = {
         });
       }
 
-      subtotal += itemPrice + addonsPrice;
+      const { options, optionsPrice } = validateProductConfiguration(
+        product,
+        item.selectedOptions || []
+      );
+
+      subtotal += itemPrice + addonsPrice + optionsPrice;
 
       validatedItems.push({
         productId: product._id.toString(),
@@ -70,6 +76,7 @@ export const OrdersService = {
         price: product.price,
         quantity: item.quantity,
         additionals,
+        options,
       });
     }
 

@@ -93,7 +93,7 @@ export function OrdersTable() {
         <h2 className="text-base sm:text-lg font-bold font-[var(--font-montserrat)] text-[#212121] flex items-center gap-2"><CreditCard size={18} /> Pedidos Entregados</h2>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={viewGrouped} onChange={(e) => setViewGrouped(e.target.checked)} className="w-4 h-4 accent-[#D9383A]" />
+            <input type="checkbox" checked={viewGrouped} onChange={(e) => setViewGrouped(e.target.checked)} className="w-4 h-4 accent-[#D95A2B]" />
             <span className="text-xs font-medium text-[#757575] flex items-center gap-1"><Package size={14} /> Agrupado</span>
           </label>
           {orders.length > 0 && (
@@ -104,9 +104,9 @@ export function OrdersTable() {
 
       <div className="flex flex-wrap gap-2 mb-4">
         {RANGES.map((r) => (
-          <button key={r} onClick={() => setRange(r)} className={`px-3 py-1 rounded-lg text-xs font-medium transition ${range === r ? 'bg-[#D9383A] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'}`}>{RANGE_LABELS[r]}</button>
+          <button key={r} onClick={() => setRange(r)} className={`px-3 py-1 rounded-lg text-xs font-medium transition ${range === r ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'}`}>{RANGE_LABELS[r]}</button>
         ))}
-        <select value={paymentFilter} disabled={viewGrouped} onChange={(e) => setPaymentFilter(e.target.value)} className="px-3 py-1 rounded-lg text-xs font-medium border border-gray-200 bg-white text-[#757575] focus:outline-none focus:border-[#D9383A] disabled:opacity-50 disabled:cursor-not-allowed">
+        <select value={paymentFilter} disabled={viewGrouped} onChange={(e) => setPaymentFilter(e.target.value)} className="px-3 py-1 rounded-lg text-xs font-medium border border-gray-200 bg-white text-[#757575] focus:outline-none focus:border-[#D95A2B] disabled:opacity-50 disabled:cursor-not-allowed">
           <option value="">Todos los pagos</option><option value="cash">Efectivo</option><option value="transfer">Transferencia</option>
         </select>
         {viewGrouped && <span className="self-center text-xs text-[#757575]">Vista agrupada (todos los pagos)</span>}
@@ -143,7 +143,7 @@ export function OrdersTable() {
                       {g.discount > 0 ? `-${formatCurrency(g.discount)}` : '-'}
                     </td>
                   )}
-                  <td className={`py-2 text-right ${g.type === 'product' ? 'font-bold text-[#D9383A]' : 'text-xs text-[#212121]'}`}>
+                  <td className={`py-2 text-right ${g.type === 'product' ? 'font-bold text-[#D95A2B]' : 'text-xs text-[#212121]'}`}>
                     {formatCurrency(g.revenue)}
                   </td>
                 </tr>
@@ -160,7 +160,7 @@ export function OrdersTable() {
                     -{formatCurrency(productRows.reduce((s, g) => s + g.discount, 0))}
                   </td>
                 )}
-                <td className="py-3 text-right font-bold text-base text-[#D9383A]">
+                <td className="py-3 text-right font-bold text-base text-[#D95A2B]">
                   {formatCurrency(productRows.reduce((s, g) => s + g.revenue, 0))}
                 </td>
               </tr>
@@ -198,7 +198,7 @@ export function OrdersTable() {
             <tfoot><tr className="border-t-2 border-gray-200"><td colSpan={3} className="py-3 text-right font-bold text-sm text-[#212121]">Total</td><td className="py-3 text-right font-bold text-base text-[#212121]">{formatCurrency(total)}</td></tr></tfoot>
           </table>
           {orders.length > PAGE_SIZE && !showAll && (
-            <button onClick={() => setShowAll(true)} className="mt-3 w-full py-2 text-sm font-medium text-[#D9383A] hover:text-[#b52d2f]">{`Ver mas (${orders.length - PAGE_SIZE} restantes)`}</button>
+            <button onClick={() => setShowAll(true)} className="mt-3 w-full py-2 text-sm font-medium text-[#D95A2B] hover:text-[#D94B2B]">{`Ver mas (${orders.length - PAGE_SIZE} restantes)`}</button>
           )}
         </>
       )}

@@ -22,7 +22,7 @@ function VentasContent() {
       <div className="flex flex-wrap gap-2 mb-4">
         {['today', 'yesterday', 'week', 'month', 'custom'].map((r) => (
           <button key={r} onClick={() => setRange(r)}
-            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${range === r ? 'bg-[#D9383A] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:bg-gray-50'}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${range === r ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:bg-gray-50'}`}>
             {r === 'today' ? 'Hoy' : r === 'yesterday' ? 'Ayer' : r === 'week' ? 'Semana' : r === 'month' ? 'Mes' : 'Personalizado'}
           </button>
         ))}

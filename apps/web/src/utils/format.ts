@@ -36,6 +36,6 @@ export function parsePromoText(text: string): string {
   let result = text;
   result = result.replace(/~~([^~]+)~~/g, '<del>$1</del>');
   result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  result = result.replace(/##([^#]+)##/g, '<span style="color:#e53e3e">$1</span>');
+  result = result.replace(/##([^#]+)##/g, '<span style="color:#D95A2B">$1</span>');
   return result;
 }

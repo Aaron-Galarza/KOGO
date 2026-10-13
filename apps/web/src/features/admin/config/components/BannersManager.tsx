@@ -52,16 +52,16 @@ export function BannersManager() {
       <form onSubmit={submit} className="space-y-3 mb-6 border-b pb-6">
         <h3 className="font-semibold text-[#212121] flex items-center gap-2">{editingId ? <Pencil size={14} /> : <Plus size={14} />} {editingId ? 'Editar banner' : 'Nuevo banner'}</h3>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D9383A]" />
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B]" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripcion" required
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D9383A]" />
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B]" />
         <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="URL de imagen" required
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D9383A]" />
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B]" />
         <input type="number" value={order} onChange={(e) => setOrder(parseInt(e.target.value) || 0)} placeholder="Orden"
           className="w-24 px-4 py-2 border-2 border-gray-300 rounded-lg" />
         {image && <div className="h-32 bg-gray-100 rounded-lg overflow-hidden"><img src={image} alt="Preview" className="h-full w-full object-cover" loading="lazy" /></div>}
         <div className="flex gap-2">
-          <button type="submit" className="px-6 py-2 bg-[#D9383A] text-white rounded-lg font-semibold hover:bg-[#b52d2f]">{editingId ? 'Actualizar' : 'Crear'}</button>
+          <button type="submit" className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-semibold hover:bg-[#D94B2B]">{editingId ? 'Actualizar' : 'Crear'}</button>
           {editingId && <button type="button" onClick={reset} className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400">Cancelar</button>}
         </div>
       </form>

@@ -74,7 +74,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange }: Orde
         {order.items.map((item, i) => (
           <div key={i} className="mb-1.5">
             <p className="text-sm font-bold text-[#212121] flex items-center gap-1">
-              <Package size={14} className="text-[#D9383A]" />
+              <Package size={14} className="text-[#D95A2B]" />
               {item.quantity}x {item.title}
             </p>
             {item.additionals?.map((a, j) => (
@@ -87,7 +87,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange }: Orde
       {/* Price + Delivery */}
       <div className="flex justify-between items-end">
         <div>
-          <p className="text-lg font-extrabold text-[#D9383A] flex items-center gap-1">
+          <p className="text-lg font-extrabold text-[#D95A2B] flex items-center gap-1">
             <DollarSign size={16} /> {formatCurrency(order.total)}
           </p>
           <p className="text-[10px] text-[#757575]">
