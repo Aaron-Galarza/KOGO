@@ -10,7 +10,7 @@ export const PAYMENT_LABELS: Record<PaymentKey, string> = {
 
 // ── Datos de la cuenta para pagos por transferencia ────────────────────────
 export const TRANSFER_INFO = {
-  alias: 'cheepers.bh',
+  alias: 'kogo.bh',
   holder: 'Ricardo Salas',
 } as const;
 
@@ -53,20 +53,23 @@ export const ORDER_STATUS_LABELS: Record<(typeof ORDER_STATUSES)[number], string
 };
 
 // ── Datos de negocio ────────────────────────────────────────────────────────
-export const BUSINESS_NAME = 'Cheepers The Burger House';
-export const SLOGAN = 'Alta calidad a precios bajos';
-export const ADDRESS = 'San Juan 1360, Resistencia - Chaco';
-export const PHONE = '+54 362 4063011';
-export const WHATSAPP_URL = 'https://wa.me/543624063011';
+export const BUSINESS_NAME = 'KOGO';
+export const SLOGAN = 'Comida coreana en Corrientes: alta calidad y una experiencia diferente';
+export const ADDRESS = 'Pasaje Agustín González 1075, W3400 Corrientes, Corrientes, Argentina';
+export const PHONE = '+54 9 3794 20-1646';
+export const WHATSAPP_NUMBER = '5493794201646';
+export const WHATSAPP_MESSAGE = 'Hola KOGO! Quiero hacer un pedido de comida coreana 🍜';
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 export const GOOGLE_MAPS_EMBED =
-  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.43240223599!2d-58.989694!3d-27.432417!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjfCsDI1JzU2LjciUyA1OMKwNTknMjIuOSJX!5e0!3m2!1ses!2sar!4v1719000000000!5m2!1ses!2sar';
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d885.0183705887081!2d-58.83767523033696!3d-27.46697159852008!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94456d9a92b13741%3A0x88c9bb11c6772785!2sKOGO%20%7C%20Korean%20Street%20Food!5e0!3m2!1ses-419!2sar!4v1791905887546!5m2!1ses-419!2sar';
 export const GOOGLE_MAPS_URL =
-  'https://www.google.com/maps?q=-27.432417,-58.989694';
-export const FACEBOOK_URL = 'https://www.facebook.com/CheepersTBH';
-export const INSTAGRAM_URL = 'https://www.instagram.com/cheeperstbh/';
+  'https://www.google.com/maps/search/?api=1&query=KOGO%20%7C%20Korean%20Street%20Food%2C%20Corrientes';
+export const FACEBOOK_URL = '#';
+export const INSTAGRAM_URL = '#';
 export const FOUNDATION_YEAR = 2019;
 export const FOUNDER = 'Ricardo Salas';
-export const SCHEDULE = 'Miércoles a Domingo: 20:00 - 23:00, Viernes y Sábados: hasta 00:00';
+export const SCHEDULE =
+  'Martes a Jueves: 11:30–14:00 | 18:30–22:30 · Viernes y Sábados: 11:30–14:00 | 18:30–23:00 · Domingo: 19:00–23:00 · Lunes: Cerrado';
 
 export const HERO_SLIDES = [
   {

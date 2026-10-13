@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { ProductOptionGroupSchema, IProductOptionGroup } from './options.model';
 
 export interface IProduct extends Document {
   title: string;
@@ -9,6 +10,7 @@ export interface IProduct extends Document {
   active: boolean;
   controlStock: boolean;
   stock: number;
+  optionGroups: IProductOptionGroup[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +53,10 @@ const productSchema = new Schema<IProduct>(
       type: Number,
       default: 0,
       min: [0, 'El stock no puede ser negativo'],
+    },
+    optionGroups: {
+      type: [ProductOptionGroupSchema],
+      default: [],
     },
   },
   { timestamps: true }

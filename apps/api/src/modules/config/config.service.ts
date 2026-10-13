@@ -1,6 +1,18 @@
-import { ConfigModel, IConfig } from './config.model';
+import { ConfigModel, IConfig, IDayRange } from './config.model';
 
 const SPANISH_DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+const minutesOf = (time: string): number => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const isWithinRange = (currentMinutes: number, range: IDayRange): boolean => {
+  const openMin = minutesOf(range.open);
+  let closeMin = minutesOf(range.close);
+  if (closeMin <= openMin) closeMin += 24 * 60;
+  return currentMinutes >= openMin && currentMinutes <= closeMin;
+};
 
 export const ConfigService = {
   getStatus: async (): Promise<IConfig> => {
@@ -8,7 +20,7 @@ export const ConfigService = {
   },
 
   // Misma lógica que StoreStatus.tsx en el frontend: combina el flag manual,
-  // el cierre de emergencia y el horario del día actual.
+  // el cierre de emergencia y el horario del día actual (soporta varios turnos).
   isOpenNow: (config: IConfig): boolean => {
     if (!config.isOpen || config.isEmergencyClosed) return false;
 
@@ -18,16 +30,11 @@ export const ConfigService = {
     const today = SPANISH_DAYS[now.getUTCDay()];
     const todaySchedule = config.dailySchedule?.find((d) => d.day === today);
 
-    if (!todaySchedule?.isStoreOpen) return false;
+    if (!todaySchedule?.isStoreOpen || !todaySchedule.ranges?.length) return false;
 
     const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-    const [oh, om] = todaySchedule.openTime.split(':').map(Number);
-    const [ch, cm] = todaySchedule.closeTime.split(':').map(Number);
-    const openMin = oh * 60 + om;
-    let closeMin = ch * 60 + cm;
-    if (closeMin <= openMin) closeMin += 24 * 60;
 
-    return currentMinutes >= openMin && currentMinutes <= closeMin;
+    return todaySchedule.ranges.some((range) => isWithinRange(currentMinutes, range));
   },
 
   getOrCreateConfig: async (): Promise<IConfig> => {

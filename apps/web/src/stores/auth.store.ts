@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem('cheepers-auth');
+    const raw = localStorage.getItem('kogo-auth');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.state?.token || null;
@@ -16,7 +16,7 @@ const getStoredToken = (): string | null => {
 const getStoredUser = (): User | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem('cheepers-auth');
+    const raw = localStorage.getItem('kogo-auth');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.state?.user || null;
@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
       getRole: () => get().user?.role || null,
     }),
     {
-      name: 'cheepers-auth',
+      name: 'kogo-auth',
       skipHydration: true,
     }
   )

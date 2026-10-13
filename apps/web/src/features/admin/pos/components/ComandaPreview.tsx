@@ -24,7 +24,7 @@ export function ComandaPreview({ items, subtotal, name, phone, shippingCost, app
 
   return (
     <div className="hidden md:flex flex-col bg-gray-50 rounded-lg overflow-y-auto border font-mono text-xs">
-      <div className="text-center font-bold text-sm py-2 border-b bg-white">CHEEPERS</div>
+      <div className="text-center font-bold text-sm py-2 border-b bg-white">KOGO</div>
       <div className="p-3 space-y-2 flex-1">
         <div className="space-y-1">
           <p><strong>Cliente:</strong> {name || '---'}</p>

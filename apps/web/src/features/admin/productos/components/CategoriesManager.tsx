@@ -60,11 +60,11 @@ export function CategoriesManager() {
       <form onSubmit={submit} className="flex gap-2 mb-4">
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
           placeholder="Nombre de categoria" required
-          className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D9383A] text-sm" />
+          className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B] text-sm" />
         <IconPicker value={icon} onChange={setIcon} />
         <input type="number" value={order} onChange={(e) => setOrder(parseInt(e.target.value) || 0)} placeholder="#"
           className="w-16 px-2 py-2 border-2 border-gray-300 rounded-lg text-sm" />
-        <button type="submit" className="px-5 py-2 bg-[#D9383A] text-white rounded-lg font-bold hover:bg-[#b52d2f] text-sm flex items-center gap-1">
+        <button type="submit" className="px-5 py-2 bg-[#D95A2B] text-white rounded-lg font-bold hover:bg-[#D94B2B] text-sm flex items-center gap-1">
           <Plus size={14} /> {editingId ? 'Actualizar' : 'Crear'}
         </button>
         {editingId && <button type="button" onClick={reset} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm">Cancelar</button>}
@@ -75,7 +75,7 @@ export function CategoriesManager() {
           const Icon = getCategoryIcon(c.icon);
           return (
             <div key={c._id} className={`flex items-center gap-3 p-3 border-2 rounded-lg ${c.isActive !== false && (c as any).active !== false ? 'border-gray-200' : 'border-gray-200 opacity-50'}`}>
-              <Icon size={20} className="text-[#D9383A] flex-shrink-0" />
+              <Icon size={20} className="text-[#D95A2B] flex-shrink-0" />
               <span className="font-bold text-sm text-[#212121] uppercase flex-1">{c.name}</span>
               <span className="text-xs text-[#757575]">#{c.order}</span>
               <div className="flex gap-1">

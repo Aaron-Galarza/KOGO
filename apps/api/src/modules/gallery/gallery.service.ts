@@ -1,11 +1,10 @@
 import {
   v2 as cloudinary,
   UploadApiResponse,
-  ResourceApiResponse,
 } from 'cloudinary';
 import { AppError } from '../../utils/appError';
 
-const GALLERY_FOLDER = 'cheepers_admin_gallery';
+const GALLERY_FOLDER = 'KOGO';
 
 export interface GalleryImage {
   id: string;
@@ -13,6 +12,13 @@ export interface GalleryImage {
   url: string;
   createdAt?: string;
   bytes?: number;
+}
+
+interface SearchResource {
+  public_id: string;
+  secure_url: string;
+  created_at: string;
+  bytes: number;
 }
 
 let configured = false;
@@ -42,16 +48,13 @@ const cleanName = (originalName: string): string =>
     .slice(0, 80)
     .replace(/^_+|_+$/g, '') || 'imagen';
 
-const toGalleryImage = (resource: ResourceApiResponse['resources'][number]): GalleryImage => {
-  const id = resource.public_id.replace(`${GALLERY_FOLDER}/`, '');
-  return {
-    id,
-    name: id,
-    url: resource.secure_url,
-    createdAt: resource.created_at,
-    bytes: resource.bytes,
-  };
-};
+const toGalleryImage = (resource: SearchResource): GalleryImage => ({
+  id: resource.public_id,
+  name: resource.public_id,
+  url: resource.secure_url,
+  createdAt: resource.created_at,
+  bytes: resource.bytes,
+});
 
 export const GalleryService = {
   uploadImage: async (file: Express.Multer.File): Promise<GalleryImage> => {
@@ -78,7 +81,7 @@ export const GalleryService = {
     });
 
     return {
-      id: result.public_id.replace(`${GALLERY_FOLDER}/`, ''),
+      id: result.public_id,
       name: file.originalname,
       url: result.secure_url,
       createdAt: result.created_at,
@@ -89,11 +92,12 @@ export const GalleryService = {
   getGalleryImages: async (): Promise<GalleryImage[]> => {
     ensureConfig();
 
-    const { resources } = (await cloudinary.api.resources({
-      type: 'upload',
-      prefix: `${GALLERY_FOLDER}/`,
-      max_results: 100,
-    })) as ResourceApiResponse;
+    const result = await cloudinary.search
+      .expression(`resource_type:image AND folder:${GALLERY_FOLDER}`)
+      .max_results(100)
+      .execute();
+
+    const resources = (result.resources || []) as unknown as SearchResource[];
 
     return resources.map(toGalleryImage).sort((a, b) => a.name.localeCompare(b.name));
   },
@@ -101,12 +105,12 @@ export const GalleryService = {
   deleteImage: async (imageId: string): Promise<void> => {
     ensureConfig();
 
-    const safeId = imageId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeId = imageId.replace(/[^a-zA-Z0-9_/-]/g, '');
     if (!safeId) {
       throw new AppError('Id de imagen inválido', 400);
     }
 
-    const result = await cloudinary.uploader.destroy(`${GALLERY_FOLDER}/${safeId}`);
+    const result = await cloudinary.uploader.destroy(safeId);
 
     if (result.result !== 'ok' && result.result !== 'not found') {
       throw new AppError('No se pudo eliminar la imagen', 500);

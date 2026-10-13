@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-export const alt = 'Cheepers';
+export const alt = 'KOGO';
 export const size = {
   width: 1200,
   height: 630,
@@ -23,7 +23,7 @@ export default async function Image() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#FFF9EE',
+          background: '#F2EEE9',
         }}
       >
         <img src={logoSrc} height={440} />

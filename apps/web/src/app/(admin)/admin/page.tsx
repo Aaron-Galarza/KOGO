@@ -8,7 +8,7 @@ import { formatCurrency } from '@/utils/format';
 
 const shortcuts = [
   { href: '/admin/cocina', label: 'Cocina', Icon: ChefHat, color: 'text-orange-600' },
-  { href: '/admin/pos', label: 'POS', Icon: ShoppingCart, color: 'text-[#D9383A]' },
+  { href: '/admin/pos', label: 'POS', Icon: ShoppingCart, color: 'text-[#D95A2B]' },
   { href: '/admin/productos', label: 'Menu', Icon: Utensils, color: 'text-green-600' },
 ];
 
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
         {metrics && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
-              { label: 'Ventas Totales', value: formatCurrency(metrics.totalSales), color: 'text-[#D9383A]' },
+              { label: 'Ventas Totales', value: formatCurrency(metrics.totalSales), color: 'text-[#D95A2B]' },
               { label: 'Pedidos Entregados', value: metrics.completedOrders, color: 'text-blue-600' },
               { label: 'Ticket Promedio', value: formatCurrency(metrics.avgTicket ?? 0), color: 'text-green-600' },
             ].map(({ label, value, color }) => (

@@ -86,9 +86,9 @@ export function AdditionalsManager() {
             {editingId ? <Pencil size={14} /> : <Plus size={14} />} {editingId ? 'Editar adicional' : 'Nuevo adicional'}
           </h3>
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nombre (ej: Cheddar Extra)" required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Precio" required min={1} step="0.01"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
 
           <div>
             <label className="block text-xs font-semibold mb-1 text-[#212121]">Categorias asociadas (vacio = todas)</label>
@@ -96,7 +96,7 @@ export function AdditionalsManager() {
               {categories.map((c) => (
                 <button type="button" key={c._id} onClick={() => toggleCat(c._id!)}
                   className={`px-2 py-1 rounded-full text-xs font-semibold transition ${
-                    selectedCats.includes(c._id!) ? 'bg-[#D9383A] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'
+                    selectedCats.includes(c._id!) ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'
                   }`}>
                   {c.name}
                 </button>
@@ -105,7 +105,7 @@ export function AdditionalsManager() {
           </div>
 
           <div className="flex gap-2">
-            <button type="submit" className="px-6 py-2 bg-[#D9383A] text-white rounded-lg font-bold hover:bg-[#b52d2f] text-sm">
+            <button type="submit" className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-bold hover:bg-[#D94B2B] text-sm">
               {editingId ? 'Actualizar' : 'Crear adicional'}
             </button>
             {editingId && <button type="button" onClick={reset} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm">Cancelar</button>}

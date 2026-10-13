@@ -22,7 +22,7 @@ export function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-[#cbd5e0] bg-white py-2.5 pl-10 pr-4 text-base text-[#2d3748] transition-shadow duration-200 placeholder:text-[#a0aec0] focus:border-[#e53e3e] focus:outline-none focus:ring-[3px] focus:ring-[rgba(229,62,62,0.2)]"
+        className="w-full rounded-lg border border-[#cbd5e0] bg-white py-2.5 pl-10 pr-4 text-base text-[#2d3748] transition-shadow duration-200 placeholder:text-[#a0aec0] focus:border-[#D95A2B] focus:outline-none focus:ring-[3px] focus:ring-[rgba(217,90,43,0.2)]"
       />
     </div>
   );

@@ -10,7 +10,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cheepersapp.vercel.app',
+        hostname: 'via.placeholder.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
         pathname: '/**',
       },
     ],

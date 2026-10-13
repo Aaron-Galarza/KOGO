@@ -31,13 +31,13 @@ export function AdminTabs() {
         {tabs.map(({ href, label, Icon }) => (
           <Link key={href} href={href}
             className={`px-3 py-3 font-semibold whitespace-nowrap transition border-b-2 flex items-center gap-2 text-xs sm:text-sm ${
-              pathname === href ? 'border-[#D9383A] text-[#D9383A]' : 'border-transparent text-[#757575] hover:text-[#212121] hover:bg-gray-50'}`}>
+              pathname === href ? 'border-[#D95A2B] text-[#D95A2B]' : 'border-transparent text-[#757575] hover:text-[#212121] hover:bg-gray-50'}`}>
             <Icon size={16} className="sm:size-[16px] size-[18px]" />
             <span className="hidden sm:inline">{label}</span>
           </Link>
         ))}
         <button onClick={handleLogout}
-          className="ml-auto px-3 py-3 text-[#D9383A] hover:bg-red-50 font-semibold border-b-2 border-transparent transition flex items-center gap-1 text-xs sm:text-sm">
+          className="ml-auto px-3 py-3 text-[#D95A2B] hover:bg-red-50 font-semibold border-b-2 border-transparent transition flex items-center gap-1 text-xs sm:text-sm">
           <LogOut size={16} /> Salir
         </button>
       </div>

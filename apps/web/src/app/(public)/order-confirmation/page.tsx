@@ -36,7 +36,7 @@ function ConfirmationContent() {
   if (loading) {
     return (
       <div className="cart-bg min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D9383A] border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D95A2B] border-t-transparent" />
       </div>
     );
   }
@@ -44,8 +44,8 @@ function ConfirmationContent() {
   if (error || !order) {
     return (
       <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4">
-        <h1 className="text-xl font-bold text-[#D9383A] mb-4">{error || 'Pedido no encontrado'}</h1>
-        <Link href="/" className="inline-block bg-[#D9383A] text-white px-6 py-2 rounded-full font-bold hover:bg-[#b52d2f]">Volver al menu</Link>
+        <h1 className="text-xl font-bold text-[#D95A2B] mb-4">{error || 'Pedido no encontrado'}</h1>
+        <Link href="/" className="inline-block bg-[#D95A2B] text-white px-6 py-2 rounded-full font-bold hover:bg-[#D94B2B]">Volver al menu</Link>
       </div>
     );
   }
@@ -61,7 +61,7 @@ function ConfirmationContent() {
       <OrderTicket order={order} />
 
       <div className="max-w-md mx-auto mt-6">
-        <Link href="/" className="w-full block text-center bg-[#D9383A] text-white py-3 rounded-full font-bold hover:bg-[#b52d2f]">
+        <Link href="/" className="w-full block text-center bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B]">
           Volver al menu
         </Link>
       </div>
@@ -71,7 +71,7 @@ function ConfirmationContent() {
 
 export default function OrderConfirmationPage() {
   return (
-    <Suspense fallback={<div className="cart-bg min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D9383A] border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="cart-bg min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-[#D95A2B] border-t-transparent" /></div>}>
       <ConfirmationContent />
     </Suspense>
   );

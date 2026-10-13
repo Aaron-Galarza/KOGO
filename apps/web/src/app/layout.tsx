@@ -34,7 +34,7 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'Cheepers - Pide tu comida',
+  title: 'KOGO - Pide tu comida',
   description: 'Hamburguesas, pizzas, lomitos y más. Entrega rápida en tu domicilio.',
 };
 

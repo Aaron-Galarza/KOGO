@@ -66,7 +66,7 @@ export function OrderNotification() {
   return (
     <div className="fixed top-4 right-4 z-[1100] w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-4 shadow-lg animate-[toastIn_0.35s_ease-out]">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-[#D9383A]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-[#D95A2B]">
           <BellRing size={20} />
         </div>
         <div className="min-w-0 flex-1">
@@ -75,7 +75,7 @@ export function OrderNotification() {
           <p className="text-xs text-[#757575]">
             {totalItems} {totalItems === 1 ? 'item' : 'items'} · {order.deliveryType === 'delivery' ? 'Delivery' : 'Pickup'}
           </p>
-          <p className="mt-1 text-sm font-bold text-[#D9383A]">
+          <p className="mt-1 text-sm font-bold text-[#D95A2B]">
             ${Number(order.total).toLocaleString('es-AR')}
           </p>
         </div>

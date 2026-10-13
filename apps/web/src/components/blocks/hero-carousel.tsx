@@ -59,7 +59,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative mx-auto mt-4 mb-20 flex min-h-[500px] w-full max-w-[1200px] items-center justify-center overflow-hidden rounded-[70px] bg-[#FFF8E1] shadow-[0_5px_20px_rgba(0,0,0,0.08)] max-md:mt-8 max-md:mb-12 max-md:min-h-[480px] max-md:rounded-[30px] max-md:pb-24 touch-pan-y"
+      className="relative mx-auto mt-4 mb-20 flex min-h-[500px] w-full max-w-[1200px] items-center justify-center overflow-hidden rounded-[70px] bg-[#F2EEE9] shadow-[0_5px_20px_rgba(0,0,0,0.08)] max-md:mt-8 max-md:mb-12 max-md:min-h-[500px] max-md:rounded-[30px] max-md:pb-20 touch-pan-y"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -74,7 +74,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             'transition-[opacity] duration-[900ms] ease-[ease-in-out]'
           )}
         >
-          <div className="relative h-[350px] w-full max-w-[550px] max-md:h-[220px] max-md:w-[95%] max-md:max-w-none">
+          <div className="relative h-[350px] w-full max-w-[550px] max-md:h-[200px] max-md:w-[95%] max-md:max-w-none">
             <Image
               src={cloudinaryUrl(slide.image, 1000)}
               alt={slide.title}
@@ -86,16 +86,16 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             />
           </div>
 
-          <div className="flex max-w-[500px] flex-col items-start max-md:items-center max-md:text-center">
-            <h2 className="font-['Oswald'] text-4xl sm:text-5xl md:text-[4rem] font-bold uppercase leading-[1.1] tracking-wide text-[#e53e3e] max-md:text-3xl line-clamp-3">
+          <div className="flex max-w-[500px] flex-col items-start max-md:items-center max-md:px-2 max-md:text-center">
+            <h2 className="font-['Oswald'] text-4xl sm:text-5xl md:text-[4rem] font-bold uppercase leading-[1.1] tracking-wide text-[#D95A2B] max-md:text-[1.6rem] line-clamp-3">
               {slide.title}
             </h2>
-            <p className="font-['Open_Sans'] text-lg sm:text-xl text-[#2d3748] max-md:text-base line-clamp-3">
+            <p className="font-['Open_Sans'] text-lg sm:text-xl text-[#2d3748] max-md:text-sm line-clamp-3">
               {slide.text}
             </p>
             <a
               href={slide.ctaHref}
-              className="mt-6 inline-block rounded-full border-2 border-[#c53030] bg-transparent px-8 py-3 font-['Oswald'] text-[1.3em] font-semibold uppercase tracking-wider text-[#c53030] transition-all duration-300 ease-in-out hover:-translate-y-[2px] hover:bg-[#c53030] hover:text-white max-md:px-6 max-md:py-2 max-md:text-base"
+              className="mt-6 inline-block rounded-full border-2 border-[#D94B2B] bg-transparent px-8 py-3 font-['Oswald'] text-[1.3em] font-semibold uppercase tracking-wider text-[#D94B2B] transition-all duration-300 ease-in-out hover:-translate-y-[2px] hover:bg-[#D94B2B] hover:text-white max-md:px-6 max-md:py-2 max-md:text-base"
             >
               {slide.cta}
             </a>
@@ -105,14 +105,14 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
       <button
         onClick={goPrev}
-        className="absolute left-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-[#c53030] shadow-[0_1px_3px_rgba(0,0,0,0.1)] transition-colors hover:bg-white max-md:hidden"
+        className="absolute left-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-[#D94B2B] shadow-[0_1px_3px_rgba(0,0,0,0.1)] transition-colors hover:bg-white max-md:hidden"
         aria-label="Slide anterior"
       >
         <ChevronLeft size={24} />
       </button>
       <button
         onClick={goNext}
-        className="absolute right-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-[#c53030] shadow-[0_1px_3px_rgba(0,0,0,0.1)] transition-colors hover:bg-white max-md:hidden"
+        className="absolute right-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-[#D94B2B] shadow-[0_1px_3px_rgba(0,0,0,0.1)] transition-colors hover:bg-white max-md:hidden"
         aria-label="Slide siguiente"
       >
         <ChevronRight size={24} />
@@ -130,7 +130,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               className={cn(
                 'block rounded-full transition-all duration-300',
                 index === current
-                  ? 'h-2 w-2 scale-125 bg-[#e53e3e] shadow-[0_0_0_4px_rgba(229,62,62,0.2)] md:h-3 md:w-3'
+                  ? 'h-2 w-2 scale-125 bg-[#D95A2B] shadow-[0_0_0_4px_rgba(217,90,43,0.2)] md:h-3 md:w-3'
                   : 'h-2 w-2 bg-[rgba(0,0,0,0.3)] hover:bg-[rgba(0,0,0,0.5)] md:h-3 md:w-3'
               )}
             />

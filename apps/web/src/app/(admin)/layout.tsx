@@ -13,7 +13,7 @@ function CredentialsScreen() {
     <div className="cart-bg min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-md w-full mx-4 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-          <Lock size={28} className="text-[#D9383A]" />
+          <Lock size={28} className="text-[#D95A2B]" />
         </div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-[#212121] font-[var(--font-montserrat)] mb-2">
           Acceso restringido
@@ -23,7 +23,7 @@ function CredentialsScreen() {
         </p>
         <button
           onClick={() => router.push('/login')}
-          className="w-full bg-[#D9383A] text-white py-3 rounded-lg font-bold hover:bg-[#b52d2f] transition"
+          className="w-full bg-[#D95A2B] text-white py-3 rounded-lg font-bold hover:bg-[#D94B2B] transition"
         >
           Ir a iniciar sesion
         </button>

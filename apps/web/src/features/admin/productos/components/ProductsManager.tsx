@@ -98,27 +98,27 @@ export function ProductsManager() {
             {editingId ? <Pencil size={14} /> : <Plus size={14} />} {editingId ? 'Editar producto' : 'Nuevo producto'}
           </h3>
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Precio" required min={1} step="0.01"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripcion" rows={2}
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none resize-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none resize-none" />
           <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="URL de imagen (opcional)"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none">
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none">
             <option value="">Seleccionar categoria</option>
             {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
           </select>
           <label className="flex items-center gap-2 text-sm text-[#212121]">
-            <input type="checkbox" checked={controlStock} onChange={(e) => setControlStock(e.target.checked)} className="accent-[#D9383A]" /> Controlar stock
+            <input type="checkbox" checked={controlStock} onChange={(e) => setControlStock(e.target.checked)} className="accent-[#D95A2B]" /> Controlar stock
           </label>
           {controlStock && (
             <input type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} placeholder="Stock disponible" min={0}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D9383A] focus:outline-none" />
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           )}
           <div className="flex gap-2">
-            <button type="submit" className="px-6 py-2 bg-[#D9383A] text-white rounded-lg font-bold hover:bg-[#b52d2f] text-sm">
+            <button type="submit" className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-bold hover:bg-[#D94B2B] text-sm">
               {editingId ? 'Actualizar' : 'Crear producto'}
             </button>
             {editingId && <button type="button" onClick={reset} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm">Cancelar</button>}
@@ -130,7 +130,7 @@ export function ProductsManager() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm text-[#212121]">Tus Productos</h3>
             <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:border-[#D9383A] focus:outline-none">
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:border-[#D95A2B] focus:outline-none">
               <option value="">Todas las categorias</option>
               {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>

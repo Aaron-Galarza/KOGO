@@ -202,16 +202,16 @@ const seedDatabase = async () => {
       isOpen: true,
       isEmergencyClosed: false,
       emergencyMessage: '',
-      banner: 'https://via.placeholder.com/1200x300?text=Cheepers',
+      banner: 'https://via.placeholder.com/1200x300?text=KOGO',
       isAllClose: false,
       dailySchedule: [
-        { day: 'Lunes', openTime: '09:00', closeTime: '23:00', isStoreOpen: true },
-        { day: 'Martes', openTime: '09:00', closeTime: '23:00', isStoreOpen: true },
-        { day: 'Miércoles', openTime: '09:00', closeTime: '23:00', isStoreOpen: true },
-        { day: 'Jueves', openTime: '09:00', closeTime: '23:00', isStoreOpen: true },
-        { day: 'Viernes', openTime: '09:00', closeTime: '00:00', isStoreOpen: true },
-        { day: 'Sábado', openTime: '09:00', closeTime: '00:00', isStoreOpen: true },
-        { day: 'Domingo', openTime: '09:00', closeTime: '23:00', isStoreOpen: true },
+        { day: 'Lunes', isStoreOpen: false, ranges: [] },
+        { day: 'Martes', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+        { day: 'Miércoles', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+        { day: 'Jueves', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+        { day: 'Viernes', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '23:00' }] },
+        { day: 'Sábado', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '23:00' }] },
+        { day: 'Domingo', isStoreOpen: true, ranges: [{ open: '19:00', close: '23:00' }] },
       ],
     });
     console.log('Config created');
@@ -242,7 +242,7 @@ const seedDatabase = async () => {
     console.log('Banners created');
 
     await User.create({
-      email: 'admin@cheepers.com',
+      email: 'admin@kogo.com',
       passwordHash: 'admin123',
       role: 'admin',
     });

@@ -18,11 +18,11 @@ export const CategoryFilter = memo(function CategoryFilter({ categories, selecte
   );
 
   return (
-    <div className="border-b border-[#e0e0e0] bg-[#FFFDF7]">
+    <div className="border-b border-[#e0e0e0] bg-[#F2EEE9]">
       <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-3 py-2 md:gap-x-5 md:py-3">
         <button
           onClick={() => onSelectCategory(null)}
-          className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold transition md:gap-1.5 md:text-sm ${!selectedCategory ? 'text-[#D9383A]' : 'text-[#757575] hover:text-[#D9383A]'}`}
+          className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold transition md:gap-1.5 md:text-sm ${!selectedCategory ? 'text-[#D95A2B]' : 'text-[#757575] hover:text-[#D95A2B]'}`}
         >
           <LayoutGrid size={16} className="size-3.5 md:size-[18px]" />
           Todos
@@ -33,7 +33,7 @@ export const CategoryFilter = memo(function CategoryFilter({ categories, selecte
             <button
               key={c.name}
               onClick={() => onSelectCategory(c.name)}
-              className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold transition md:gap-1.5 md:text-sm ${selectedCategory === c.name ? 'text-[#D9383A]' : 'text-[#757575] hover:text-[#D9383A]'}`}
+              className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold transition md:gap-1.5 md:text-sm ${selectedCategory === c.name ? 'text-[#D95A2B]' : 'text-[#757575] hover:text-[#D95A2B]'}`}
             >
               <Icon size={20} className="size-4 md:size-5" />
               {c.name}

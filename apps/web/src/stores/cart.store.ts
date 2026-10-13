@@ -167,7 +167,7 @@ export const useCartStore = create<CartState>()(
       getItemCount: () => get().items.reduce((c, i) => c + i.quantity, 0),
     }),
     {
-      name: 'cheepers-cart',
+      name: 'kogo-cart',
       version: 2,
       skipHydration: true,
       migrate: (persisted: any) => {

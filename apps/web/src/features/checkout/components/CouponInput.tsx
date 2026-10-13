@@ -46,7 +46,7 @@ export function CouponInput({ disabled = false }: CouponInputProps) {
           className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-600 font-mono uppercase"
           disabled={loading || disabled} />
         <button onClick={() => handleApplyCoupon(code)} disabled={loading || !code.trim() || disabled}
-          className="px-4 py-2 bg-[#D9383A] text-white rounded-lg hover:bg-[#b52d2f] disabled:bg-gray-400 transition font-semibold text-sm">
+          className="px-4 py-2 bg-[#D95A2B] text-white rounded-lg hover:bg-[#D94B2B] disabled:bg-gray-400 transition font-semibold text-sm">
           {loading ? '...' : 'Aplicar'}
         </button>
       </div>

@@ -29,7 +29,7 @@ export const ProductCard = memo(function ProductCard({ product, onAddClick, isAd
           </div>
         )}
         {product.promotionalLabel && (
-          <span className="absolute top-2 left-2 rounded-full bg-[#F9A825] px-2 py-0.5 text-[10px] font-bold text-white shadow sm:top-3 sm:left-3 sm:px-3 sm:py-1 sm:text-xs">
+          <span className="absolute top-2 left-2 rounded-full bg-[#F2B6A0] px-2 py-0.5 text-[10px] font-bold text-white shadow sm:top-3 sm:left-3 sm:px-3 sm:py-1 sm:text-xs">
             {product.promotionalLabel}
           </span>
         )}
@@ -47,7 +47,7 @@ export const ProductCard = memo(function ProductCard({ product, onAddClick, isAd
         )}
 
         <div className="mt-auto flex items-center justify-between gap-2">
-          <span className="font-extrabold text-[#D9383A] font-[var(--font-montserrat)] text-sm sm:text-base md:text-lg">
+          <span className="font-extrabold text-[#D95A2B] font-[var(--font-montserrat)] text-sm sm:text-base md:text-lg">
             {formatCurrency(product.price)}
           </span>
           <button
@@ -59,7 +59,7 @@ export const ProductCard = memo(function ProductCard({ product, onAddClick, isAd
                 ? 'bg-gray-400 cursor-not-allowed'
                 : isAdded
                   ? 'bg-green-500 scale-95'
-                  : 'bg-[#D9383A] hover:bg-[#b52d2f] active:scale-95'
+                  : 'bg-[#D95A2B] hover:bg-[#D94B2B] active:scale-95'
             }`}
           >
             {isOutOfStock ? <PackageX size={14} /> : isAdded ? <Check size={14} /> : null}

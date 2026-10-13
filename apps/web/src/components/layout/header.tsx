@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, User, Menu, X } from "lucide-react";
 import { useCartStore } from "@/stores/cart.store";
@@ -28,14 +29,17 @@ export default function Header() {
       <div className="flex items-center">
         <Link href="/" className="flex items-center no-underline">
           <div className="mr-2 md:mr-[12px]">
-            <img
-              src="https://res.cloudinary.com/dwqxdensk/image/upload/q_auto,f_auto,w_140/v1784748985/logocheepers_u8y9am.webp"
-              alt="Cheepers Logo"
-              className="h-[40px] w-[40px] md:h-[70px] md:w-[70px] object-contain" loading="lazy"
+            <Image
+              src="/logo.webp"
+              alt="KOGO"
+              width={70}
+              height={70}
+              priority
+              className="h-[40px] w-[40px] md:h-[70px] md:w-[70px] object-contain"
             />
           </div>
           <span className="text-[1.8rem] font-bold text-[#2d3748] md:text-[2.2rem]">
-            CHEEPERS
+            KOGO
           </span>
         </Link>
       </div>
@@ -52,8 +56,8 @@ export default function Header() {
               href={link.href}
               className={`text-[1.2rem] transition-colors duration-200 ${
                 isActive
-                  ? "font-bold text-[#e53e3e]"
-                  : "font-medium text-[#2d3748] hover:font-bold hover:text-[#e53e3e]"
+                  ? "font-bold text-[#D95A2B]"
+                  : "font-medium text-[#2d3748] hover:font-bold hover:text-[#D95A2B]"
               }`}
             >
               {link.name}
@@ -69,13 +73,13 @@ export default function Header() {
         <Link
           href="/cart"
           aria-label="Ver carrito"
-          className="group relative flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#e53e3e] text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#e41212] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)]"
+          className="group relative flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#D95A2B] text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#D94B2B] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)]"
         >
           <ShoppingCart size={20} className="text-white transition-colors duration-300 group-hover:text-white" />
           
           {/* Badge del carrito */}
           {mounted && cartCount > 0 && (
-            <span className="absolute -right-[6px] -top-[6px] rounded-full border-2 border-[#e53e3e] bg-white px-[6px] py-[2px] text-[0.7rem] font-bold text-[#e53e3e]">
+            <span className="absolute -right-[6px] -top-[6px] rounded-full border-2 border-[#D95A2B] bg-white px-[6px] py-[2px] text-[0.7rem] font-bold text-[#D95A2B]">
               {cartCount}
             </span>
           )}
@@ -85,14 +89,14 @@ export default function Header() {
         <Link
           href="/login"
           aria-label="Ingresar"
-          className="group hidden h-[40px] w-[40px] items-center justify-center rounded-full bg-[#e53e3e] text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#e41212] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)] md:flex"
+          className="group hidden h-[40px] w-[40px] items-center justify-center rounded-full bg-[#D95A2B] text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-[2px] hover:bg-[#D94B2B] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)] md:flex"
         >
           <User size={20} className="text-white transition-colors duration-300 group-hover:text-white" />
         </Link>
 
         {/* Toggle Menú Móvil */}
         <button
-          className="block cursor-pointer border-none bg-transparent p-0 text-[#e53e3e] md:hidden"
+          className="block cursor-pointer border-none bg-transparent p-0 text-[#D95A2B] md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Alternar menú"
         >
@@ -112,7 +116,7 @@ export default function Header() {
                 href={link.href}
                 className={`w-full border-b border-[#edf2f7] py-[16px] text-center text-[1.2rem] last:border-b-0 ${
                   isActive
-                    ? "font-bold text-[#e53e3e]"
+                    ? "font-bold text-[#D95A2B]"
                     : "font-medium text-[#2d3748]"
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)} // Cierra el menú al navegar

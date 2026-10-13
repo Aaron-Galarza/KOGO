@@ -15,6 +15,12 @@ export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export const DELIVERY_TYPES = ['pickup', 'delivery'] as const;
 export type DeliveryType = (typeof DELIVERY_TYPES)[number];
 
+// --- Tipos de grupos de opciones configurables de producto ---
+// single: el cliente elige como máximo 1 opción del grupo (ej: proteína, tamaño)
+// multiple: el cliente puede elegir varias opciones (ej: salsas, extras)
+export const OPTION_GROUP_TYPES = ['single', 'multiple'] as const;
+export type OptionGroupType = (typeof OPTION_GROUP_TYPES)[number];
+
 // --- Rangos de fechas (stats / analytics) ---
 export const DATE_RANGES = ['today', 'yesterday', 'week', 'month'] as const;
 export type DateRange = (typeof DATE_RANGES)[number];
@@ -26,14 +32,25 @@ export const WEEK_DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'
 export const WEEKDAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
 export type WeekdayName = (typeof WEEKDAY_NAMES)[number];
 
-export const DEFAULT_DAILY_SCHEDULE: Array<{ day: string; openTime: string; closeTime: string; isStoreOpen: boolean }> = [
-  { day: 'Lunes', openTime: '20:00', closeTime: '23:00', isStoreOpen: true },
-  { day: 'Martes', openTime: '20:00', closeTime: '23:00', isStoreOpen: true },
-  { day: 'Miércoles', openTime: '20:00', closeTime: '23:00', isStoreOpen: true },
-  { day: 'Jueves', openTime: '20:00', closeTime: '23:00', isStoreOpen: true },
-  { day: 'Viernes', openTime: '20:00', closeTime: '00:00', isStoreOpen: true },
-  { day: 'Sábado', openTime: '20:00', closeTime: '00:00', isStoreOpen: true },
-  { day: 'Domingo', openTime: '20:00', closeTime: '23:00', isStoreOpen: true },
+export interface DayRange {
+  open: string;
+  close: string;
+}
+
+export interface DefaultDaySchedule {
+  day: string;
+  isStoreOpen: boolean;
+  ranges: DayRange[];
+}
+
+export const DEFAULT_DAILY_SCHEDULE: DefaultDaySchedule[] = [
+  { day: 'Lunes', isStoreOpen: false, ranges: [] },
+  { day: 'Martes', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+  { day: 'Miércoles', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+  { day: 'Jueves', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '22:30' }] },
+  { day: 'Viernes', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '23:00' }] },
+  { day: 'Sábado', isStoreOpen: true, ranges: [{ open: '11:30', close: '14:00' }, { open: '18:30', close: '23:00' }] },
+  { day: 'Domingo', isStoreOpen: true, ranges: [{ open: '19:00', close: '23:00' }] },
 ];
 
 // --- Defaults de entorno ---
@@ -47,8 +64,6 @@ export const ALLOWED_ORIGINS = (() => {
     .filter(Boolean);
   return [
     DEFAULT_CLIENT_URL,
-    'https://cheepers-tbh.vercel.app',
-    'https://cheepersapp.vercel.app',
     ...envOrigins,
   ];
 })();
