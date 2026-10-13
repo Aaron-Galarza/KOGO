@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\Trabajo\\\\CheepersTBH\\\\apps\")",
+      "Bash(npx --yes create-next-app@latest web --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
+      "Bash(npm install *)",
+      "Bash(touch components/ui/button.tsx components/ui/card.tsx components/ui/input.tsx components/ui/modal.tsx components/ui/badge.tsx components/ui/tabs.tsx components/ui/select.tsx components/ui/ProductCard.tsx components/ui/index.ts)",
+      "Bash(touch components/blocks/hero-carousel.tsx components/blocks/menu-section.tsx components/blocks/about-section.tsx components/blocks/stats-section.tsx components/blocks/cta-section.tsx components/blocks/index.ts)",
+      "Bash(touch components/common/SearchBar.tsx components/common/CartSummary.tsx components/common/AddOnSelector.tsx components/common/OrderTicket.tsx components/common/index.ts)",
+      "Bash(touch components/layout/header.tsx components/layout/footer.tsx components/layout/navigation.tsx components/layout/AdminTabs.tsx)",
+      "Bash(touch features/home/components/HeroSection.tsx features/home/hooks/useBanners.ts features/home/index.ts)",
+      "Bash(mv postcss.config.mjs postcss.config.js)",
+      "Bash(touch public/logo-cheepers.svg)",
+      "Bash(rm -f public/file.svg public/globe.svg public/next.svg public/vercel.svg public/window.svg)",
+      "Bash(touch public/favicon.ico)",
+      "Bash(npx next *)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\Trabajo\\\\CheepersTBH\\\\apps\\\\api\")",
+      "Bash(npm init *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
