@@ -18,6 +18,8 @@ interface HeroCarouselProps {
   slides: HeroSlide[];
 }
 
+const isGifUrl = (url: string): boolean => /\.gif(\?|#|$)/i.test(url);
+
 export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -75,15 +77,24 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           )}
         >
           <div className="relative h-[350px] w-full max-w-[550px] max-md:h-[200px] max-md:w-[95%] max-md:max-w-none">
-            <Image
-              src={cloudinaryUrl(slide.image, 1000)}
-              alt={slide.title}
-              fill
-              priority={index === 0}
-              loading={index === 0 ? 'eager' : 'lazy'}
-              sizes="(max-width: 640px) 90vw, 550px"
-              className="rounded-2xl object-cover shadow-[0_10px_15px_rgba(0,0,0,0.1),0_4px_6px_rgba(0,0,0,0.05)]"
-            />
+            {isGifUrl(slide.image) ? (
+              // GIF: usar <img> sin optimización para conservar la animación
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="h-full w-full rounded-2xl object-cover shadow-[0_10px_15px_rgba(0,0,0,0.1),0_4px_6px_rgba(0,0,0,0.05)]"
+              />
+            ) : (
+              <Image
+                src={cloudinaryUrl(slide.image, 1000)}
+                alt={slide.title}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                sizes="(max-width: 640px) 90vw, 550px"
+                className="rounded-2xl object-cover shadow-[0_10px_15px_rgba(0,0,0,0.1),0_4px_6px_rgba(0,0,0,0.05)]"
+              />
+            )}
           </div>
 
           <div className="flex max-w-[500px] flex-col items-start max-md:items-center max-md:px-2 max-md:text-center">

@@ -1,5 +1,7 @@
 export function cloudinaryUrl(url: string, width: number): string {
   if (!url) return url;
+  // No transformar GIFs: perderían la animación.
+  if (/\.gif(\?|#|$)/i.test(url)) return url;
   try {
     const u = new URL(url);
     if (!u.hostname.endsWith('res.cloudinary.com')) return url;
