@@ -7,6 +7,8 @@ export type AdminRange = 'today' | 'yesterday' | 'week' | 'month' | 'custom' | '
 let productsPromise: Promise<any> | null = null;
 let categoriesPromise: Promise<any> | null = null;
 let addonsPromise: Promise<any> | null = null;
+let optionsPromise: Promise<any> | null = null;
+let optionGroupsPromise: Promise<any> | null = null;
 
 // ── Products ──────────────────────────────────────────────────────────────────
 export const fetchAdminProducts = () => {
@@ -73,6 +75,50 @@ export const toggleAddonActive = (id: string) =>
 
 export const deleteAddon = (id: string) =>
   apiClient.delete(`/additionals/admin/${id}`).then((r) => r.data.data);
+
+// ── Options (ingredientes) ────────────────────────────────────────────────────
+export const fetchAdminOptions = () => {
+  if (!optionsPromise) {
+    optionsPromise = apiClient.get('/options/admin/all')
+      .then((r) => r.data.data)
+      .finally(() => { optionsPromise = null; });
+  }
+  return optionsPromise;
+};
+
+export const createOption = (payload: Record<string, any>) =>
+  apiClient.post('/options/admin', payload).then((r) => r.data.data);
+
+export const updateOption = (id: string, payload: Record<string, any>) =>
+  apiClient.put(`/options/admin/${id}`, payload).then((r) => r.data.data);
+
+export const toggleOptionActive = (id: string) =>
+  apiClient.patch(`/options/admin/${id}/toggle`).then((r) => r.data.data);
+
+export const deleteOption = (id: string) =>
+  apiClient.delete(`/options/admin/${id}`).then((r) => r.data.data);
+
+// ── Option groups (grupos de opciones) ───────────────────────────────────────
+export const fetchAdminOptionGroups = () => {
+  if (!optionGroupsPromise) {
+    optionGroupsPromise = apiClient.get('/option-groups/admin/all')
+      .then((r) => r.data.data)
+      .finally(() => { optionGroupsPromise = null; });
+  }
+  return optionGroupsPromise;
+};
+
+export const createOptionGroup = (payload: Record<string, any>) =>
+  apiClient.post('/option-groups/admin', payload).then((r) => r.data.data);
+
+export const updateOptionGroup = (id: string, payload: Record<string, any>) =>
+  apiClient.put(`/option-groups/admin/${id}`, payload).then((r) => r.data.data);
+
+export const toggleOptionGroupActive = (id: string) =>
+  apiClient.patch(`/option-groups/admin/${id}/toggle`).then((r) => r.data.data);
+
+export const deleteOptionGroup = (id: string) =>
+  apiClient.delete(`/option-groups/admin/${id}`).then((r) => r.data.data);
 
 // ── Orders ───────────────────────────────────────────────────────────────────
 export const fetchAdminOrders = (status?: string, range?: string, customFrom?: string, customTo?: string) => {
@@ -176,4 +222,4 @@ export const uploadGalleryImage = (formData: FormData) =>
   apiClient.post('/gallery', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data.data);
 
 export const deleteGalleryImage = (imageId: string) =>
-  apiClient.delete(`/gallery/${imageId}`).then((r) => r.data.data);
+  apiClient.delete(`/gallery/${encodeURIComponent(imageId)}`).then((r) => r.data.data);
