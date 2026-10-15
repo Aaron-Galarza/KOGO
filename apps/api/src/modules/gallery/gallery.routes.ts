@@ -7,5 +7,6 @@ const router = Router();
 router.get('/', protect, GalleryController.list);
 router.post('/', protect, isAdmin, GalleryController.upload, GalleryController.uploadImage);
 router.delete('/:imageId', protect, isAdmin, GalleryController.remove);
+router.delete('/*imageId', protect, isAdmin, GalleryController.remove);
 
 export default router;
