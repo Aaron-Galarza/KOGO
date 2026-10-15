@@ -64,10 +64,13 @@ export function POSCart({ onCheckout }: POSCartProps) {
                         <span className="text-[10px] md:text-xs font-bold w-4 md:w-5 text-center">{item.quantity || 1}</span>
                         <button onClick={() => updateQuantity(id, (item.quantity || 1) + 1)} disabled={atMaxStock} className={`w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-xs hover:bg-gray-300 ${atMaxStock ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-200 text-gray-700'}`}><Plus size={10} /></button>
                       </div>
-                      <span className="text-[10px] md:text-xs font-bold text-[#D95A2B]">{formatCurrency(item.price * (item.quantity || 1))}</span>
+                      <span className="text-[10px] md:text-xs font-bold text-[#D95A2B]">{formatCurrency((item.price + (item.precioIngredientesUnidad || 0)) * (item.quantity || 1))}</span>
                     </div>
                     {(item.addOns || []).length > 0 && (
                       <p className="text-[9px] md:text-[10px] text-[#757575] mt-0.5 truncate">{(item.addOns || []).map((a: any) => a.name + (a.quantity > 1 ? ` x${a.quantity}` : '')).join(', ')}</p>
+                    )}
+                    {(item.ingredientes || []).length > 0 && (
+                      <p className="text-[9px] md:text-[10px] text-[#757575] mt-0.5 truncate">{(item.ingredientes || []).map((o: any) => o.ingredienteNombre + (o.cantidad > 1 ? ` x${o.cantidad}` : '')).join(', ')}</p>
                     )}
                   </div>
                   <div className="flex gap-0.5 md:gap-1 ml-1">

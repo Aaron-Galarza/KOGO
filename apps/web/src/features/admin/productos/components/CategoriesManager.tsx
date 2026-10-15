@@ -6,6 +6,7 @@ import { Category } from '@/types';
 import { IconPicker, getCategoryIcon } from './IconPicker';
 import { Plus, Pencil, Trash2, Power, PowerOff } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { Hint } from '@/features/admin/components/Hint';
 
 export function CategoriesManager() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -57,13 +58,16 @@ export function CategoriesManager() {
       {error && <p className="text-red-600 mb-3 text-sm">{error}</p>}
       {msg && <p className="text-green-600 mb-3 text-sm">{msg}</p>}
 
-      <form onSubmit={submit} className="flex gap-2 mb-4">
+      <form onSubmit={submit} className="flex flex-wrap gap-2 mb-4 items-center">
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
           placeholder="Nombre de categoria" required
-          className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B] text-sm" />
+          className="flex-1 min-w-[140px] px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#D95A2B] text-sm" />
+        <Hint>Nombre de la sección del menú (ej: Sushi).</Hint>
         <IconPicker value={icon} onChange={setIcon} />
+        <Hint>Ícono que se muestra junto a la categoría.</Hint>
         <input type="number" value={order} onChange={(e) => setOrder(parseInt(e.target.value) || 0)} placeholder="#"
           className="w-16 px-2 py-2 border-2 border-gray-300 rounded-lg text-sm" />
+        <Hint>Orden en el menú (menor = primero).</Hint>
         <button type="submit" className="px-5 py-2 bg-[#D95A2B] text-white rounded-lg font-bold hover:bg-[#D94B2B] text-sm flex items-center gap-1">
           <Plus size={14} /> {editingId ? 'Actualizar' : 'Crear'}
         </button>

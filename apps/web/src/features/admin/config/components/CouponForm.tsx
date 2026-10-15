@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Ticket, Plus } from 'lucide-react';
 import { createCoupon } from '@/services/admin.service';
 import { Coupon } from '@/types';
+import { Hint } from '@/features/admin/components/Hint';
 
 const DAYS = [
   { key: 'monday', label: 'Lun' },
@@ -62,16 +63,25 @@ export function CouponForm({ onCouponAdded }: CouponFormProps) {
       <h2 className="text-lg font-bold mb-4 font-[var(--font-montserrat)] text-[#212121] flex items-center gap-2"><Plus size={18} /> Nuevo cupon</h2>
       {error && <p className="text-red-600 mb-3 text-sm">{error}</p>}
       <div className="space-y-3">
-        <input type="text" value={code} onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
-          placeholder="DESCUENTO10" required disabled={loading} maxLength={20}
-          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B] font-mono uppercase" />
         <div>
-          <label className="block text-xs font-semibold mb-1 text-[#212121]">Descuento (%)</label>
+          <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+            Código <Hint>Palabra que el cliente escribe para aplicar el descuento. Solo letras y números.</Hint>
+          </label>
+          <input type="text" value={code} onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
+            placeholder="DESCUENTO10" required disabled={loading} maxLength={20}
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B] font-mono uppercase" />
+        </div>
+        <div>
+          <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+            Descuento (%) <Hint>Porcentaje que se resta del total del pedido.</Hint>
+          </label>
           <input type="number" min={1} max={100} value={discount} onChange={(e) => setDiscount(parseInt(e.target.value) || 1)}
             required disabled={loading} className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B]" />
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-1.5 text-[#212121]">Dias validos (opcional)</label>
+          <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+            Días válidos <Hint>Días en que el cupón funciona. Si no elegís ninguno, vale todos los días.</Hint>
+          </label>
           <div className="flex flex-wrap gap-1">
             {DAYS.map((d) => (
               <button type="button" key={d.key} onClick={() => toggle(validDays, setValidDays, d.key)}
@@ -82,7 +92,9 @@ export function CouponForm({ onCouponAdded }: CouponFormProps) {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-1.5 text-[#212121]">Metodos de pago (opcional)</label>
+          <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+            Métodos de pago <Hint>Con qué medios de pago aplica. Si no elegís ninguno, vale para todos.</Hint>
+          </label>
           <div className="flex gap-1">
             {PAYMENTS.map((p) => (
               <button type="button" key={p.key} onClick={() => toggle(validPaymentMethods, setValidPaymentMethods, p.key)}

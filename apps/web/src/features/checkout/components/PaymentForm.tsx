@@ -26,7 +26,7 @@ export function PaymentForm({ disabled = false }: PaymentFormProps) {
               paymentMethod === value ? 'border-red-600 bg-red-50' : 'border-gray-200 hover:border-gray-300'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <input type="radio" name="payment" value={value} checked={paymentMethod === value}
-              onChange={(e) => setPaymentMethod(e.target.value as any)}
+              onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'mercadopago')}
               className="mr-3 w-5 h-5 accent-red-600" disabled={disabled} />
             <Icon size={20} className="mr-2 text-[#757575]" />
             <div>

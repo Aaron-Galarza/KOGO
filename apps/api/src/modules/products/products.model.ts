@@ -1,5 +1,15 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ProductOptionGroupSchema, IProductOptionGroup } from './options.model';
+import { PRODUCT_TYPES, ProductType } from '../../constants';
+
+export interface IProductGroupAssociation {
+  _id?: mongoose.Types.ObjectId;
+  grupo: mongoose.Types.ObjectId;
+  orden: number;
+  obligatorio?: boolean | null;
+  minimo?: number | null;
+  maximo?: number | null;
+  ingredientes?: mongoose.Types.ObjectId[];
+}
 
 export interface IProduct extends Document {
   title: string;
@@ -10,10 +20,43 @@ export interface IProduct extends Document {
   active: boolean;
   controlStock: boolean;
   stock: number;
-  optionGroups: IProductOptionGroup[];
+  tipoProducto: ProductType;
+  order: number;
+  gruposOpciones: IProductGroupAssociation[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const ProductGroupAssociationSchema = new Schema<IProductGroupAssociation>(
+  {
+    grupo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'GrupoOpciones',
+      required: [true, 'El grupo de opciones referenciado es obligatorio'],
+    },
+    orden: {
+      type: Number,
+      default: 0,
+    },
+    obligatorio: {
+      type: Boolean,
+      default: null,
+    },
+    minimo: {
+      type: Number,
+      default: null,
+    },
+    maximo: {
+      type: Number,
+      default: null,
+    },
+    ingredientes: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Opcion' }],
+      default: [],
+    },
+  },
+  { _id: true }
+);
 
 const productSchema = new Schema<IProduct>(
   {
@@ -54,8 +97,18 @@ const productSchema = new Schema<IProduct>(
       default: 0,
       min: [0, 'El stock no puede ser negativo'],
     },
-    optionGroups: {
-      type: [ProductOptionGroupSchema],
+    tipoProducto: {
+      type: String,
+      enum: PRODUCT_TYPES,
+      default: 'simple',
+      index: true,
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+    gruposOpciones: {
+      type: [ProductGroupAssociationSchema],
       default: [],
     },
   },

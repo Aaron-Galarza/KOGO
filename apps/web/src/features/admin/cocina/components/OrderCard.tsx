@@ -80,6 +80,11 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange }: Orde
             {item.additionals?.map((a, j) => (
               <p key={j} className="text-xs ml-5 text-[#757575] font-medium">+ {a.name}</p>
             ))}
+            {item.ingredientes?.map((o, j) => (
+              <p key={`opt-${j}`} className="text-xs ml-5 text-[#757575] font-medium">
+                • {o.ingredienteNombre}{o.cantidad > 1 ? ` x${o.cantidad}` : ''}
+              </p>
+            ))}
           </div>
         ))}
       </div>

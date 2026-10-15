@@ -41,6 +41,12 @@ export function OrderTicket({ order }: OrderTicketProps) {
                   + {addon.name || addon.title} - {formatCurrency(addon.price)}
                 </p>
               ))}
+              {item.ingredientes?.map((opt, oi) => (
+                <p key={`opt-${oi}`} className="text-xs text-[#757575] ml-2">
+                  • {opt.ingredienteNombre}{opt.cantidad > 1 ? ` x${opt.cantidad}` : ''}
+                  {opt.precio > 0 ? ` - ${formatCurrency(opt.precio)}` : ''}
+                </p>
+              ))}
             </div>
           ))}
         </div>

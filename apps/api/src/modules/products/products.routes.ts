@@ -7,4 +7,7 @@ export default makeCrudRoutes({
   createSchema: ProductCreateSchema,
   updateSchema: ProductUpdateSchema,
   withGetById: true,
+  publicExtras: (router) => {
+    router.get('/:id', ProductsController.getDetailed);
+  },
 });

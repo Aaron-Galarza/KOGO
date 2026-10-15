@@ -182,6 +182,9 @@ export function OrdersTable() {
                         {item.additionals?.map((a, j) => (
                           <span key={j} className="text-xs text-[#757575] ml-2">+{a.name}{a.quantity > 1 ? ` x${a.quantity}` : ''}</span>
                         ))}
+                        {item.ingredientes?.map((opt, j) => (
+                          <span key={`opt-${j}`} className="text-xs text-[#757575] ml-2">•{opt.ingredienteNombre}{opt.cantidad > 1 ? ` x${opt.cantidad}` : ''}</span>
+                        ))}
                       </div>
                     ))}
                   </td>

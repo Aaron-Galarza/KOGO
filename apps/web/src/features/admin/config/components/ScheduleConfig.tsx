@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Save, Plus, X } from 'lucide-react';
 import { fetchConfigStatus, saveSchedule } from '@/services/admin.service';
 import { useToast } from '@/hooks/useToast';
+import { Hint } from '@/features/admin/components/Hint';
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -96,7 +97,7 @@ export function ScheduleConfig() {
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-md">
-      <h2 className="text-lg font-bold mb-4 font-[var(--font-montserrat)] text-[#212121] flex items-center gap-2"><Clock size={18} /> Horarios</h2>
+      <h2 className="text-lg font-bold mb-4 font-[var(--font-montserrat)] text-[#212121] flex items-center gap-2"><Clock size={18} /> Horarios <Hint>Definí en qué días y horarios la tienda acepta pedidos.</Hint></h2>
       {error && <p className="text-red-600 mb-4 text-sm">{error}</p>}
       {msg && <p className="text-green-600 mb-4 text-sm">{msg}</p>}
       <div className="space-y-2">
@@ -118,7 +119,7 @@ export function ScheduleConfig() {
             <div key={k} className="flex flex-col gap-2 p-3 border rounded-lg">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="w-20 sm:w-28 font-semibold text-xs sm:text-sm">{DAYS[i]}</span>
-                <span className="text-xs sm:text-sm text-[#757575]">Turnos:</span>
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-[#757575]">Turnos: <Hint>Cada turno es una franja de apertura (de tal hora a tal hora). Podés agregar varios por día.</Hint></span>
                 <button onClick={() => addRange(k)}
                   className="ml-auto flex items-center gap-1 px-3 py-1 bg-[#D95A2B] text-white rounded text-xs sm:text-sm font-semibold">
                   <Plus size={13} /> Turno
@@ -133,10 +134,10 @@ export function ScheduleConfig() {
 
               {ranges.map((r, idx) => (
                 <div key={idx} className="flex flex-wrap items-center gap-2">
-                  <input type="time" value={r.open} onChange={(e) => setRange(k, idx, 'open', e.target.value)}
+                  <input type="time" value={r.open} onChange={(e) => setRange(k, idx, 'open', e.target.value)} title="Hora de apertura"
                     className="px-1.5 sm:px-2 py-1 border rounded text-xs sm:text-sm w-[100px] sm:w-auto" />
-                  <span className="text-xs sm:text-sm text-[#757575]">a</span>
-                  <input type="time" value={r.close} onChange={(e) => setRange(k, idx, 'close', e.target.value)}
+                  <span className="flex items-center gap-1 text-xs sm:text-sm text-[#757575]">a <Hint>Hora en que abre y en que cierra este turno.</Hint></span>
+                  <input type="time" value={r.close} onChange={(e) => setRange(k, idx, 'close', e.target.value)} title="Hora de cierre"
                     className="px-1.5 sm:px-2 py-1 border rounded text-xs sm:text-sm w-[100px] sm:w-auto" />
                   <button onClick={() => removeRange(k, idx)} title="Quitar turno"
                     className="p-1 text-red-600 hover:bg-red-50 rounded"><X size={16} /></button>

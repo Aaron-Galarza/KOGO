@@ -7,6 +7,7 @@ import { Addon, Category } from '@/types';
 import { formatCurrency } from '@/utils/format';
 import { Plus, Pencil, Trash2, Power, PowerOff, Package } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { Hint } from '@/features/admin/components/Hint';
 
 export function AdditionalsManager() {
   const [additionals, setAdditionals] = useState<Addon[]>([]);
@@ -85,13 +86,25 @@ export function AdditionalsManager() {
           <h3 className="font-semibold text-[#212121] flex items-center gap-2 text-sm">
             {editingId ? <Pencil size={14} /> : <Plus size={14} />} {editingId ? 'Editar adicional' : 'Nuevo adicional'}
           </h3>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nombre (ej: Cheddar Extra)" required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
-          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Precio" required min={1} step="0.01"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Nombre <Hint>Nombre del adicional (ej: Cheddar Extra).</Hint>
+            </label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Cheddar Extra" required
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Precio <Hint>Cuánto suma este adicional al producto.</Hint>
+            </label>
+            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Ej: 500" required min={1} step="0.01"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          </div>
 
           <div>
-            <label className="block text-xs font-semibold mb-1 text-[#212121]">Categorias asociadas (vacio = todas)</label>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Categorías asociadas <Hint>En qué categorías se puede elegir. Si no elegís ninguna, aparece en todas.</Hint>
+            </label>
             <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto p-2 border rounded-lg">
               {categories.map((c) => (
                 <button type="button" key={c._id} onClick={() => toggleCat(c._id!)}

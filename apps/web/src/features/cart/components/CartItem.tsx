@@ -1,7 +1,7 @@
 'use client';
 
 import { CartItem as CartItemType, Addon, Category, SelectedAddOn } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 import { AddOnSelector } from '@/components/common/AddOnSelector';
 
@@ -9,9 +9,10 @@ interface CartItemProps {
   item: CartItemType;
   allAdditionals: Addon[];
   allCategories: Category[];
-  onIncrement: (addOns: SelectedAddOn[]) => void;
+  onIncrement: () => void;
   onDecrement: (cartItemId: string) => void;
   onUpdateAddOns: (cartItemId: string, newAddOns: SelectedAddOn[]) => void;
+  onEdit?: () => void;
   onRemove: (cartItemId: string) => void;
 }
 
@@ -24,13 +25,16 @@ function getProductCategoryId(pc: unknown, cats: Category[]): string | null {
 
 export function CartItem({
   item, allAdditionals, allCategories,
-  onIncrement, onDecrement, onUpdateAddOns, onRemove,
+  onIncrement, onDecrement, onUpdateAddOns, onEdit, onRemove,
 }: CartItemProps) {
   const title = item.title || item.name;
   const img = item.image || item.imageUrl;
   const addOns = (item as any).addOns ?? (item as any).addons ?? [];
+  const ingredientes = item.ingredientes ?? [];
   const addOnsTotal = addOns.reduce((s: number, a: any) => s + a.price * (a.quantity || 1), 0);
-  const subtotal = item.price * item.quantity + addOnsTotal;
+  const ingredientesTotal = ingredientes.reduce((s: number, o: any) => s + o.precio * (o.cantidad || 1), 0);
+  const subtotal = (item.price + ingredientesTotal) * item.quantity + addOnsTotal;
+  const isConfigurable = item.tipoProducto === 'configurable' || ingredientes.length > 0;
   const catId = getProductCategoryId(item.category, allCategories);
   const maxStock = item.controlStock === true ? (item.stock ?? 0) : Infinity;
   const atMaxStock = item.quantity >= maxStock;
@@ -67,7 +71,26 @@ export function CartItem({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-extrabold uppercase tracking-wide text-[#212121] font-[var(--font-montserrat)]">{title}</h3>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-sm font-extrabold uppercase tracking-wide text-[#212121] font-[var(--font-montserrat)]">{title}</h3>
+            {isConfigurable && onEdit && (
+              <button onClick={onEdit} className="flex shrink-0 items-center gap-1 rounded-full border border-[#D95A2B] px-2.5 py-1 text-[11px] font-semibold text-[#D95A2B] transition hover:bg-[#D95A2B] hover:text-white">
+                <Pencil size={11} /> Editar
+              </button>
+            )}
+          </div>
+
+          {ingredientes.length > 0 && (
+            <ul className="mt-1 space-y-0.5">
+              {ingredientes.map((o) => (
+                <li key={`${o.grupoId}-${o.ingredienteId}`} className="text-xs text-[#757575] font-[var(--font-open-sans)]">
+                  <span className="font-semibold text-[#4a5568]">{o.grupoNombre}:</span> {o.ingredienteNombre}
+                  {o.cantidad > 1 ? ` x${o.cantidad}` : ''}
+                  {o.precio > 0 ? ` (+${formatCurrency(o.precio)})` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="mt-1 flex items-center gap-2">
             <span className="text-xs text-[#757575] font-[var(--font-open-sans)]">Cantidad:</span>
@@ -75,7 +98,7 @@ export function CartItem({
               <button onClick={() => onDecrement(item.cartItemId)} aria-label="Disminuir cantidad" className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e0e0e0] text-sm font-bold text-[#757575] transition hover:border-[#D95A2B] hover:text-[#D95A2B]">-</button>
               <span className="w-6 text-center text-sm font-bold text-[#212121]">{item.quantity}</span>
               <button
-                onClick={() => onIncrement(item.addOns)}
+                onClick={onIncrement}
                 disabled={atMaxStock}
                 aria-label={atMaxStock ? 'Stock máximo alcanzado' : 'Incrementar cantidad'}
                 className={`flex h-7 w-7 items-center justify-center rounded-full border border-[#e0e0e0] text-sm font-bold transition ${

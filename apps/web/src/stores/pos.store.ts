@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import { CartItem, SelectedAddOn } from '@/types';
+import { CartItem, SelectedAddOn, OpcionElegida } from '@/types';
 
 interface POSState {
   items: CartItem[];
   searchQuery: string;
   selectedCategory: string | null;
-  addItem: (product: any, quantity: number, addons: SelectedAddOn[]) => void;
+  addItem: (product: any, quantity: number, addons: SelectedAddOn[], ingredientes?: OpcionElegida[]) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   updateAddOns: (itemId: string, addOns: SelectedAddOn[]) => void;
@@ -20,14 +20,15 @@ export const usePOSStore = create<POSState>((set, get) => ({
   searchQuery: '',
   selectedCategory: null,
 
-  addItem: (product: any, quantity: number, addons: SelectedAddOn[]) => {
+  addItem: (product: any, quantity: number, addons: SelectedAddOn[], ingredientes: OpcionElegida[] = []) => {
     if (product.controlStock === true) {
       const stock = product.stock ?? 0;
       if (stock <= 0) return;
       quantity = Math.min(quantity, stock);
     }
+    const precioIngredientesUnidad = ingredientes.reduce((s, o) => s + o.precio * (o.cantidad || 1), 0);
     set((state) => ({
-      items: [...state.items, { ...product, quantity, addOns: addons, cartItemId: `${product._id}-${Date.now()}` }],
+      items: [...state.items, { ...product, quantity, addOns: addons, ingredientes, precioIngredientesUnidad, cartItemId: `${product._id}-${Date.now()}` }],
     }));
   },
 
@@ -64,6 +65,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
     return get().items.reduce((sum, item) => {
       let price = item.price;
       for (const ao of item.addOns) price += ao.price * ao.quantity;
+      for (const op of item.ingredientes ?? []) price += op.precio * (op.cantidad || 1);
       return sum + price * item.quantity;
     }, 0);
   },

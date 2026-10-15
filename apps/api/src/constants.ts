@@ -16,10 +16,16 @@ export const DELIVERY_TYPES = ['pickup', 'delivery'] as const;
 export type DeliveryType = (typeof DELIVERY_TYPES)[number];
 
 // --- Tipos de grupos de opciones configurables de producto ---
-// single: el cliente elige como máximo 1 opción del grupo (ej: proteína, tamaño)
+// unico: el cliente elige como máximo 1 opción del grupo (ej: proteína, tamaño)
 // multiple: el cliente puede elegir varias opciones (ej: salsas, extras)
-export const OPTION_GROUP_TYPES = ['single', 'multiple'] as const;
+export const OPTION_GROUP_TYPES = ['unico', 'multiple'] as const;
 export type OptionGroupType = (typeof OPTION_GROUP_TYPES)[number];
+
+// --- Tipos de producto ---
+// simple: se agrega al carrito con su precio y cantidad
+// configurable: requiere seleccionar opciones antes de agregarlo al carrito
+export const PRODUCT_TYPES = ['simple', 'configurable'] as const;
+export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 // --- Rangos de fechas (stats / analytics) ---
 export const DATE_RANGES = ['today', 'yesterday', 'week', 'month'] as const;
