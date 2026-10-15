@@ -12,6 +12,7 @@ export interface GalleryImage {
   url: string;
   createdAt?: string;
   bytes?: number;
+  format?: string;
 }
 
 interface SearchResource {
@@ -19,6 +20,7 @@ interface SearchResource {
   secure_url: string;
   created_at: string;
   bytes: number;
+  format?: string;
 }
 
 let configured = false;
@@ -43,49 +45,89 @@ const ensureConfig = (): void => {
 
 const cleanName = (originalName: string): string =>
   originalName
-    .replace(/\.[^/.]+$/, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\.(gif|jpe?g|png|webp|avif|heic|bmp|tiff?|svg)$/i, '')
     .replace(/[^a-zA-Z0-9_-]+/g, '_')
     .slice(0, 80)
     .replace(/^_+|_+$/g, '') || 'imagen';
 
+const isGif = (file: Express.Multer.File): boolean =>
+  file.mimetype === 'image/gif' ||
+  file.originalname.toLowerCase().endsWith('.gif') ||
+  file.buffer.toString('ascii', 0, 6) === 'GIF87a' ||
+  file.buffer.toString('ascii', 0, 6) === 'GIF89a';
+
+const friendlyName = (publicId: string): string => publicId.split('/').pop() || publicId;
+
+const isDuplicateError = (error: unknown): boolean => {
+  const err = error as { http_code?: number; message?: string };
+  return err?.http_code === 409 || /already exists/i.test(String(err?.message || ''));
+};
+
+const runUpload = (
+  file: Express.Multer.File,
+  publicId: string,
+  gif: boolean
+): Promise<UploadApiResponse> =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: GALLERY_FOLDER,
+        public_id: publicId,
+        unique_filename: false,
+        overwrite: false,
+        ...(gif
+          ? {}
+          : {
+              format: 'webp',
+              transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+            }),
+      },
+      (error, uploadResult) => {
+        if (error || !uploadResult) {
+          reject(error || new AppError('No se pudo subir la imagen', 500));
+        } else {
+          resolve(uploadResult);
+        }
+      }
+    );
+    stream.end(file.buffer);
+  });
+
 const toGalleryImage = (resource: SearchResource): GalleryImage => ({
   id: resource.public_id,
-  name: resource.public_id,
+  name: friendlyName(resource.public_id),
   url: resource.secure_url,
   createdAt: resource.created_at,
   bytes: resource.bytes,
+  format: resource.format,
 });
 
 export const GalleryService = {
-  uploadImage: async (file: Express.Multer.File): Promise<GalleryImage> => {
+  uploadImage: async (file: Express.Multer.File, title?: string): Promise<GalleryImage> => {
     ensureConfig();
 
-    const publicId = `${cleanName(file.originalname)}_${Date.now()}`;
+    const gif = isGif(file);
+    const base = cleanName(title || file.originalname);
 
-    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: GALLERY_FOLDER,
-          format: 'webp',
-          transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-        },
-        (error, uploadResult) => {
-          if (error || !uploadResult) {
-            reject(new AppError('No se pudo subir la imagen', 500));
-          } else {
-            resolve(uploadResult);
-          }
-        }
-      );
-      stream.end(file.buffer);
-    });
+    let result: UploadApiResponse;
+    try {
+      result = await runUpload(file, base, gif);
+    } catch (error) {
+      if (!isDuplicateError(error)) {
+        throw new AppError('No se pudo subir la imagen', 500);
+      }
+      result = await runUpload(file, `${base}_${Date.now().toString(36)}`, gif);
+    }
 
     return {
       id: result.public_id,
-      name: file.originalname,
+      name: friendlyName(result.public_id),
       url: result.secure_url,
       createdAt: result.created_at,
       bytes: result.bytes,
+      format: result.format,
     };
   },
 
@@ -105,7 +147,14 @@ export const GalleryService = {
   deleteImage: async (imageId: string): Promise<void> => {
     ensureConfig();
 
-    const safeId = imageId.replace(/[^a-zA-Z0-9_/-]/g, '');
+    let decodedId = imageId;
+    try {
+      decodedId = decodeURIComponent(imageId);
+    } catch {
+      decodedId = imageId;
+    }
+
+    const safeId = decodedId.replace(/[^a-zA-Z0-9_/-]/g, '');
     if (!safeId) {
       throw new AppError('Id de imagen inválido', 400);
     }
