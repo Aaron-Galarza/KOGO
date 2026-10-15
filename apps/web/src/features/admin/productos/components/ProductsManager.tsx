@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchAdminCategories, fetchAdminProducts, createProduct, updateProduct, toggleProductActive, deleteProduct } from '@/services/admin.service';
+import { fetchAdminCategories, fetchAdminProducts, fetchAdminOptionGroups, createProduct, updateProduct, toggleProductActive, deleteProduct } from '@/services/admin.service';
 import { Product, Category } from '@/types';
 import { formatCurrency } from '@/utils/format';
 import { Plus, Pencil, Trash2, Power, PowerOff, Package } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { Hint } from '@/features/admin/components/Hint';
 
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [optionGroups, setOptionGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, msg, showError, showMsg } = useToast();
   const [filterCat, setFilterCat] = useState('');
@@ -21,6 +23,8 @@ export function ProductsManager() {
   const [categoryId, setCategoryId] = useState('');
   const [stock, setStock] = useState(0);
   const [controlStock, setControlStock] = useState(false);
+  const [tipoProducto, setTipoProducto] = useState<'simple' | 'configurable'>('simple');
+  const [groupIds, setGroupIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => { load(); }, []);
@@ -28,22 +32,36 @@ export function ProductsManager() {
   const load = async () => {
     setLoading(true);
     try {
-      const [p, c] = await Promise.all([fetchAdminProducts(), fetchAdminCategories()]);
+      const [p, c, g] = await Promise.all([fetchAdminProducts(), fetchAdminCategories(), fetchAdminOptionGroups()]);
       setProducts(p);
       setCategories(c);
+      setOptionGroups(g as any[]);
     } catch { showError('Error al cargar'); }
     setLoading(false);
   };
 
   const reset = () => {
-    setTitle(''); setPrice(''); setDescription(''); setImage(''); setCategoryId(''); setStock(0); setControlStock(false); setEditingId(null);
+    setTitle(''); setPrice(''); setDescription(''); setImage(''); setCategoryId(''); setStock(0); setControlStock(false);
+    setTipoProducto('simple'); setGroupIds([]); setEditingId(null);
+  };
+
+  const toggleGroup = (id: string) => {
+    setGroupIds((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryId) { showError('Selecciona una categoria'); return; }
+    if (image && /\.gif(\?|#|$)/i.test(image)) { showError('Los GIF solo se permiten en el banner. Usá una imagen JPG, PNG o WEBP.'); return; }
     try {
-      const payload = { title, price: parseFloat(price), description, image, category: categoryId, active: true, controlStock, stock };
+      const payload: Record<string, any> = {
+        title, price: parseFloat(price), description, image, category: categoryId, active: true, controlStock, stock, tipoProducto,
+      };
+      if (tipoProducto === 'configurable') {
+        payload.gruposOpciones = groupIds.map((gid, i) => ({ grupo: gid, orden: i }));
+      } else {
+        payload.gruposOpciones = [];
+      }
       if (editingId) {
         await updateProduct(editingId, payload);
         showMsg('Producto actualizado');
@@ -63,6 +81,8 @@ export function ProductsManager() {
     setCategoryId(typeof p.category === 'object' ? (p.category as any)._id : String(p.category));
     setStock(p.controlStock === true ? (p.stock ?? 0) : 0);
     setControlStock(p.controlStock === true);
+    setTipoProducto((p.tipoProducto as 'simple' | 'configurable') || 'simple');
+    setGroupIds(((p as any).gruposOpciones || []).map((a: any) => (typeof a.grupo === 'object' ? a.grupo._id : a.grupo)));
     setEditingId(p._id);
   };
 
@@ -97,26 +117,94 @@ export function ProductsManager() {
           <h3 className="font-semibold text-[#212121] flex items-center gap-2 text-sm">
             {editingId ? <Pencil size={14} /> : <Plus size={14} />} {editingId ? 'Editar producto' : 'Nuevo producto'}
           </h3>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
-          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Precio" required min={1} step="0.01"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripcion" rows={2}
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none resize-none" />
-          <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="URL de imagen (opcional)"
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required
-            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none">
-            <option value="">Seleccionar categoria</option>
-            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-          </select>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Nombre del producto <Hint>Es el nombre que ve el cliente en el menú.</Hint>
+            </label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Kogo Clásico" required
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Precio base <Hint>Precio sin contar los ingredientes que el cliente agregue.</Hint>
+            </label>
+            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Ej: 7799" required min={1} step="0.01"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Descripción <Hint>Texto corto que aparece debajo del nombre.</Hint>
+            </label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripción (opcional)" rows={2}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none resize-none" />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Foto del producto <Hint>Link (URL) de la imagen. Opcional. Los GIF no se permiten en productos, solo en el banner.</Hint>
+            </label>
+            <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..."
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Categoría <Hint>Sección del menú donde aparece el producto.</Hint>
+            </label>
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none">
+              <option value="">Seleccionar categoría</option>
+              {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
+          </div>
+
           <label className="flex items-center gap-2 text-sm text-[#212121]">
             <input type="checkbox" checked={controlStock} onChange={(e) => setControlStock(e.target.checked)} className="accent-[#D95A2B]" /> Controlar stock
+            <Hint>Si lo activás, se descuenta con cada venta y se bloquea al llegar a 0.</Hint>
           </label>
           {controlStock && (
-            <input type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} placeholder="Stock disponible" min={0}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+            <div>
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+                Unidades disponibles <Hint>Cantidad que se puede vender ahora.</Hint>
+              </label>
+              <input type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} placeholder="Stock disponible" min={0}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+            </div>
           )}
+
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+              Tipo de producto <Hint>Simple: se agrega directo. Configurable: el cliente elige ingredientes antes de agregarlo.</Hint>
+            </label>
+            <select value={tipoProducto} onChange={(e) => setTipoProducto(e.target.value as 'simple' | 'configurable')}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none">
+              <option value="simple">Simple (sin pasos)</option>
+              <option value="configurable">Configurable (con pasos)</option>
+            </select>
+          </div>
+
+          {tipoProducto === 'configurable' && (
+            <div>
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
+                Pasos que debe completar <Hint>El cliente los ve en un asistente. El número indica el orden: se arma según el orden en que tocás cada uno.</Hint>
+              </label>
+              <div className="flex flex-wrap gap-1 max-h-[140px] overflow-y-auto p-2 border rounded-lg">
+                {optionGroups.length === 0 && <p className="text-[11px] text-[#757575]">No hay grupos creados.</p>}
+                {optionGroups.map((g: any) => (
+                  <button type="button" key={g._id} onClick={() => toggleGroup(g._id)}
+                    className={`px-2 py-1 rounded-full text-xs font-semibold transition ${
+                      groupIds.includes(g._id) ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'
+                    }`}>
+                    {g.nombre}{groupIds.includes(g._id) ? ` (${groupIds.indexOf(g._id) + 1})` : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button type="submit" className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-bold hover:bg-[#D94B2B] text-sm">
               {editingId ? 'Actualizar' : 'Crear producto'}
@@ -148,6 +236,9 @@ export function ProductsManager() {
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${((p as any).stock ?? 0) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                         Stock: {(p as any).stock ?? 0}
                       </span>
+                    )}
+                    {p.tipoProducto === 'configurable' && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-[#F2EEE9] text-[#D95A2B]">Con pasos</span>
                     )}
                   </div>
                   <p className="text-[10px] text-[#757575]">{getCatName(p)} · {formatCurrency(p.price)}</p>
