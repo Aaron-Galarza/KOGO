@@ -1,29 +1,57 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CartItem, SelectedAddOn, Coupon, Addon } from '@/types';
+import { CartItem, SelectedAddOn, OpcionElegida, Coupon, Addon } from '@/types';
 
-function generateCartItemId(productId: string, addOns: SelectedAddOn[]): string {
-  if (!addOns || addOns.length === 0) return productId;
-  const sorted = [...addOns].sort((a, b) => a._id.localeCompare(b._id));
-  const parts = sorted.map((a) => `${a._id}:${a.quantity}`).join(',');
-  return `${productId}__${parts}`;
+function normalizeOpcion(o: any): OpcionElegida {
+  return {
+    grupoId: o.grupoId ?? o.groupId,
+    grupoNombre: o.grupoNombre ?? o.groupName,
+    ingredienteId: o.ingredienteId ?? o.optionId,
+    ingredienteNombre: o.ingredienteNombre ?? o.optionName,
+    precio: o.precio ?? o.price,
+    cantidad: o.cantidad ?? o.quantity ?? 1,
+  };
+}
+
+function generateCartItemId(
+  productId: string,
+  addOns: SelectedAddOn[],
+  ingredientes: OpcionElegida[] = []
+): string {
+  const parts: string[] = [];
+  if (addOns && addOns.length > 0) {
+    const sorted = [...addOns].sort((a, b) => a._id.localeCompare(b._id));
+    parts.push('a:' + sorted.map((a) => `${a._id}:${a.quantity}`).join(','));
+  }
+  if (ingredientes && ingredientes.length > 0) {
+    const sorted = [...ingredientes].sort((a, b) =>
+      `${a.grupoId}.${a.ingredienteId}`.localeCompare(`${b.grupoId}.${b.ingredienteId}`)
+    );
+    parts.push('o:' + sorted.map((o) => `${o.grupoId}.${o.ingredienteId}:${o.cantidad || 1}`).join(','));
+  }
+  return parts.length === 0 ? productId : `${productId}__${parts.join('|')}`;
+}
+
+function precioIngredientes(ingredientes: OpcionElegida[] = []): number {
+  return ingredientes.reduce((s, o) => s + o.precio * (o.cantidad || 1), 0);
 }
 
 interface CartState {
   items: CartItem[];
   deliveryType: 'pickup' | 'delivery' | null;
-  paymentMethod: 'cash' | 'debito' | 'credito' | 'transferencia' | null;
+  paymentMethod: 'cash' | 'transfer' | 'mercadopago' | null;
   coupon: Coupon | null;
   deliveryAddress: string;
   deliveryCoordinates: { lat: number; lng: number } | null;
   deliveryCost: number;
 
-  addToCart: (product: any, addOns: SelectedAddOn[]) => void;
+  addToCart: (product: any, addOns: SelectedAddOn[], ingredientes?: OpcionElegida[]) => void;
   removeFromCart: (cartItemId: string) => void;
   updateCartItemAddOns: (oldCartItemId: string, newAddOns: SelectedAddOn[]) => void;
+  updateCartItemOptions: (oldCartItemId: string, ingredientes: OpcionElegida[]) => void;
   clearCart: () => void;
   setDeliveryType: (t: 'pickup' | 'delivery') => void;
-  setPaymentMethod: (m: 'cash' | 'debito' | 'credito' | 'transferencia') => void;
+  setPaymentMethod: (m: 'cash' | 'transfer' | 'mercadopago') => void;
   setCoupon: (c: Coupon) => void;
   clearCoupon: () => void;
   setDeliveryAddress: (a: string, c: { lat: number; lng: number }) => void;
@@ -50,9 +78,9 @@ export const useCartStore = create<CartState>()(
       deliveryCoordinates: null,
       deliveryCost: 0,
 
-      addToCart: (product: any, addOns: SelectedAddOn[]) => {
+      addToCart: (product: any, addOns: SelectedAddOn[], ingredientes: OpcionElegida[] = []) => {
         set((prev) => {
-          const id = generateCartItemId(product._id, addOns);
+          const id = generateCartItemId(product._id, addOns, ingredientes);
           const exists = prev.items.find((item) => item.cartItemId === id);
           if (exists) {
             const maxStock = product.controlStock === true ? (product.stock ?? 0) : Infinity;
@@ -67,7 +95,14 @@ export const useCartStore = create<CartState>()(
           return {
             items: [
               ...prev.items,
-              { ...product, quantity: 1, addOns, cartItemId: id },
+              {
+                ...product,
+                quantity: 1,
+                addOns,
+                ingredientes,
+                precioIngredientesUnidad: precioIngredientes(ingredientes),
+                cartItemId: id,
+              },
             ],
           };
         });
@@ -148,6 +183,40 @@ export const useCartStore = create<CartState>()(
         });
       },
 
+      updateCartItemOptions: (oldCartItemId: string, ingredientes: OpcionElegida[]) => {
+        set((prev) => {
+          const idx = prev.items.findIndex((i) => i.cartItemId === oldCartItemId);
+          if (idx === -1) return prev;
+          const item = prev.items[idx];
+          const newId = generateCartItemId(item._id, item.addOns ?? [], ingredientes);
+          if (newId === oldCartItemId) return prev;
+
+          const precioUnidad = precioIngredientes(ingredientes);
+          const next = [...prev.items];
+
+          if (item.quantity > 1) {
+            next[idx] = { ...item, quantity: item.quantity - 1 };
+            const existingIdx = next.findIndex((i, k) => k !== idx && i.cartItemId === newId);
+            if (existingIdx !== -1) {
+              next[existingIdx] = { ...next[existingIdx], quantity: next[existingIdx].quantity + 1 };
+            } else {
+              next.splice(idx + 1, 0, { ...item, quantity: 1, ingredientes, precioIngredientesUnidad: precioUnidad, cartItemId: newId });
+            }
+            return { items: next };
+          }
+
+          const existingIdx = next.findIndex((i, k) => k !== idx && i.cartItemId === newId);
+          if (existingIdx !== -1) {
+            next[existingIdx] = { ...next[existingIdx], quantity: next[existingIdx].quantity + 1 };
+            next.splice(idx, 1);
+            return { items: next };
+          }
+
+          next[idx] = { ...item, ingredientes, precioIngredientesUnidad: precioUnidad, cartItemId: newId };
+          return { items: next };
+        });
+      },
+
       clearCart: () => set({ items: [], coupon: null, deliveryCost: 0, deliveryCoordinates: null, deliveryAddress: '', deliveryType: null, paymentMethod: null }),
       setDeliveryType: (t) => { set({ deliveryType: t }); if (t === 'pickup') get().clearDelivery(); },
       setPaymentMethod: (m) => set({ paymentMethod: m }),
@@ -160,7 +229,11 @@ export const useCartStore = create<CartState>()(
       getSubtotal: () =>
         get().items.reduce((sum, item: any) => {
           const addOnsTotal = getAddOns(item).reduce((s: number, a: any) => s + a.price * (a.quantity || 1), 0);
-          return sum + item.price * item.quantity + addOnsTotal;
+          const ingredientesTotal = (item.ingredientes ?? []).reduce(
+            (s: number, o: any) => s + o.precio * (o.cantidad || 1),
+            0
+          );
+          return sum + (item.price + ingredientesTotal) * item.quantity + addOnsTotal;
         }, 0),
       getDiscount: () => (get().coupon ? (get().getSubtotal() * get().coupon!.discountPercent) / 100 : 0),
       getTotal: () => get().getSubtotal() - get().getDiscount() + get().deliveryCost,
@@ -168,15 +241,22 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'kogo-cart',
-      version: 2,
+      version: 4,
       skipHydration: true,
       migrate: (persisted: any) => {
         const raw = (persisted?.items || []).map((item: any) => {
           const addOns = item.addOns ?? item.addons ?? [];
+          const ingredientes = (item.ingredientes ?? item.selectedOptions ?? []).map(normalizeOpcion);
           const cartItemId =
             item.cartItemId ??
-            generateCartItemId(item.product?._id ?? item._id, addOns);
-          return { ...item, addOns, cartItemId };
+            generateCartItemId(item.product?._id ?? item._id, addOns, ingredientes);
+          return {
+            ...item,
+            addOns,
+            ingredientes,
+            precioIngredientesUnidad: item.precioIngredientesUnidad ?? precioIngredientes(ingredientes),
+            cartItemId,
+          };
         });
         const merged = new Map<string, any>();
         for (const item of raw) {

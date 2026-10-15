@@ -2,9 +2,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICategoria extends Document {
   name: string;
+  description?: string;
   order: number;
   active: boolean;
   icon?: string;
+  parent?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,6 +18,9 @@ const CategoriaSchema = new Schema<ICategoria>(
       required: [true, 'El nombre de la categoría es obligatorio'],
       unique: true,
       trim: true,
+    },
+    description: {
+      type: String,
     },
     order: {
       type: Number,
@@ -30,6 +35,12 @@ const CategoriaSchema = new Schema<ICategoria>(
     icon: {
       type: String,
       default: '',
+    },
+    parent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Categoria',
+      default: null,
+      index: true,
     },
   },
   { timestamps: true }

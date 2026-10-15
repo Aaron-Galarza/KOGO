@@ -12,7 +12,8 @@ function formatWhatsApp(phone: string, order: Order): string {
   const base = digits.startsWith('54') ? digits : `54${digits}`;
   const items = order.items.map((i) => {
     const hasAdds = i.additionals && i.additionals.length > 0;
-    return `- ${i.title}${i.quantity > 1 ? ` x${i.quantity}` : ''}${hasAdds ? ' %2Badicionales' : ''}`;
+    const hasOpts = i.ingredientes && i.ingredientes.length > 0;
+    return `- ${i.title}${i.quantity > 1 ? ` x${i.quantity}` : ''}${hasAdds ? ' %2Badicionales' : ''}${hasOpts ? ' %2Bopciones' : ''}`;
   }).join('%0A');
   const total = `$${order.total?.toLocaleString('es-AR')}`;
   const msg = `Hola ${order.customer.name}!%0A%0ATu pedido en KOGO:%0A%0A${items}%0A%0ATotal: ${total}%0AEstado: En preparacion%0A%0ARecibimos tu pedido, algun detalle mas que desees agregar?`;
@@ -119,6 +120,15 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
                   {item.additionals.map((a, j) => (
                     <p key={j} className="text-sm text-[#757575] font-medium">
                       &#8627; {a.name} <span className="text-[10px] text-[#D95A2B]">- {formatCurrency(a.price)}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+              {item.ingredientes && item.ingredientes.length > 0 && (
+                <div className="ml-2 mt-0.5">
+                  {item.ingredientes.map((o, j) => (
+                    <p key={`opt-${j}`} className="text-sm text-[#757575] font-medium">
+                      &#8226; {o.ingredienteNombre}{o.cantidad > 1 ? ` x${o.cantidad}` : ''}{o.precio > 0 && <span className="text-[10px] text-[#D95A2B]"> - {formatCurrency(o.precio)}</span>}
                     </p>
                   ))}
                 </div>

@@ -51,8 +51,8 @@ export function CouponsList({ onLoaded }: CouponsListProps) {
                 <p className="text-sm text-[#757575]">{c.discountPercent}% descuento</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => toggle(c._id)} className={`p-2 rounded text-white ${c.active ? 'bg-green-600' : 'bg-gray-400'}`}>{c.active ? <Power size={14} /> : <PowerOff size={14} />}</button>
-                <button onClick={() => del(c._id)} className="p-2 bg-red-600 text-white rounded"><Trash2 size={14} /></button>
+                <button onClick={() => toggle(c._id)} title={c.active ? 'Desactivar cupón' : 'Activar cupón'} className={`p-2 rounded text-white ${c.active ? 'bg-green-600' : 'bg-gray-400'}`}>{c.active ? <Power size={14} /> : <PowerOff size={14} />}</button>
+                <button onClick={() => del(c._id)} title="Eliminar cupón" className="p-2 bg-red-600 text-white rounded"><Trash2 size={14} /></button>
               </div>
             </div>
           ))}

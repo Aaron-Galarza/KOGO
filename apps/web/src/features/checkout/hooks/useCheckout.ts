@@ -48,6 +48,11 @@ export function useCheckout() {
             price: a.price,
             quantity: a.quantity,
           })),
+          ingredientes: (item.ingredientes ?? []).map((o) => ({
+            grupoId: o.grupoId,
+            ingredienteId: o.ingredienteId,
+            cantidad: o.cantidad,
+          })),
         })),
         deliveryType,
         paymentMethod,

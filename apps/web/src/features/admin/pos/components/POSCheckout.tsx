@@ -63,6 +63,9 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
           additionals: (item.addOns || []).map((a: any) => ({
             name: a.name, addonId: a._id, price: a.price, quantity: a.quantity || 1,
           })),
+          ingredientes: (item.ingredientes || []).map((o: any) => ({
+            grupoId: o.grupoId, ingredienteId: o.ingredienteId, cantidad: o.cantidad || 1,
+          })),
         })),
         deliveryType: deliveryType || 'pickup',
         paymentMethod: holdPay,
@@ -80,6 +83,7 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
           price: item.price,
           quantity: item.quantity || 1,
           additionals: (item.addOns || []).map((a: any) => ({ name: a.name, quantity: a.quantity || 1, price: a.price })),
+          ingredientes: (item.ingredientes || []).map((o: any) => ({ grupoNombre: o.grupoNombre, ingredienteNombre: o.ingredienteNombre, cantidad: o.cantidad || 1, precio: o.precio })),
         })),
         deliveryType: deliveryType || 'pickup',
         paymentMethod: holdPay,

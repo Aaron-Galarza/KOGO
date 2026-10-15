@@ -15,13 +15,13 @@ export interface IOrderItemAddon {
   quantity: number;
 }
 
-export interface IOrderItemOption {
-  groupId: string;
-  groupName: string;
-  optionId: string;
-  optionName: string;
-  price: number;
-  quantity: number;
+export interface IOrderItemIngrediente {
+  grupoId: string;
+  grupoNombre: string;
+  ingredienteId: string;
+  ingredienteNombre: string;
+  precio: number;
+  cantidad: number;
 }
 
 export interface IOrderItem {
@@ -30,7 +30,11 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   additionals: IOrderItemAddon[];
-  options: IOrderItemOption[];
+  ingredientes: IOrderItemIngrediente[];
+  precioBaseUnidad: number;
+  precioIngredientesUnidad: number;
+  precioFinalUnidad: number;
+  totalLinea: number;
 }
 
 export interface IOrder extends Document {
@@ -61,13 +65,13 @@ const OrderItemAddonSchema = new Schema<IOrderItemAddon>({
   quantity: { type: Number, required: true, min: 1 },
 }, { _id: false });
 
-const OrderItemOptionSchema = new Schema<IOrderItemOption>({
-  groupId: { type: String, required: true },
-  groupName: { type: String, required: true },
-  optionId: { type: String, required: true },
-  optionName: { type: String, required: true },
-  price: { type: Number, required: true, min: 0 },
-  quantity: { type: Number, required: true, min: 1 },
+const OrderItemIngredienteSchema = new Schema<IOrderItemIngrediente>({
+  grupoId: { type: String, required: true },
+  grupoNombre: { type: String, required: true },
+  ingredienteId: { type: String, required: true },
+  ingredienteNombre: { type: String, required: true },
+  precio: { type: Number, required: true, min: 0 },
+  cantidad: { type: Number, required: true, min: 1 },
 }, { _id: false });
 
 const OrderItemSchema = new Schema<IOrderItem>({
@@ -76,7 +80,11 @@ const OrderItemSchema = new Schema<IOrderItem>({
   price: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1 },
   additionals: { type: [OrderItemAddonSchema], default: [] },
-  options: { type: [OrderItemOptionSchema], default: [] },
+  ingredientes: { type: [OrderItemIngredienteSchema], default: [] },
+  precioBaseUnidad: { type: Number, default: 0, min: 0 },
+  precioIngredientesUnidad: { type: Number, default: 0, min: 0 },
+  precioFinalUnidad: { type: Number, default: 0, min: 0 },
+  totalLinea: { type: Number, default: 0, min: 0 },
 }, { _id: false });
 
 const orderSchema = new Schema<IOrder>(

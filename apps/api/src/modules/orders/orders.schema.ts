@@ -6,17 +6,17 @@ const AdditionalItemSchema = z.object({
   quantity: z.number().positive('La cantidad debe ser mayor a 0'),
 });
 
-const SelectedOptionSchema = z.object({
-  groupId: z.string().min(1, 'El id del grupo es requerido'),
-  optionId: z.string().min(1, 'El id de la opción es requerido'),
-  quantity: z.number().int().positive('La cantidad debe ser mayor a 0').optional(),
+const IngredienteElegidoSchema = z.object({
+  grupoId: z.string().min(1, 'El id del grupo es requerido'),
+  ingredienteId: z.string().min(1, 'El id del ingrediente es requerido'),
+  cantidad: z.number().int().positive('La cantidad debe ser mayor a 0').optional(),
 });
 
 const OrderItemSchema = z.object({
   productId: z.string().min(1, 'El id del producto es requerido'),
   quantity: z.number().positive('La cantidad debe ser mayor a 0'),
   additionals: z.array(AdditionalItemSchema).optional().default([]),
-  selectedOptions: z.array(SelectedOptionSchema).optional().default([]),
+  ingredientes: z.array(IngredienteElegidoSchema).optional().default([]),
 });
 
 export const CreateOrderSchema = z.object({

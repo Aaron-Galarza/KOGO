@@ -1,11 +1,10 @@
-export const PAYS = ['cash', 'debito', 'credito', 'transferencia'] as const;
+export const PAYS = ['cash', 'transfer', 'mercadopago'] as const;
 export type PaymentKey = (typeof PAYS)[number];
 
 export const PAYMENT_LABELS: Record<PaymentKey, string> = {
   cash: '💵 Efectivo',
-  debito: '🏧 Débito',
-  credito: '💳 Crédito',
-  transferencia: '🏦 Transferencia',
+  transfer: '🏦 Transferencia',
+  mercadopago: '💳 Mercado Pago',
 };
 
 // ── Datos de la cuenta para pagos por transferencia ────────────────────────

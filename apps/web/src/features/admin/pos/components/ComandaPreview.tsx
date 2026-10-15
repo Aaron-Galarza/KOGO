@@ -42,6 +42,11 @@ export function ComandaPreview({ items, subtotal, name, phone, shippingCost, app
               {(item.addOns || []).map((a: any) => (
                 <p key={a._id} className="text-[10px] ml-3 text-[#757575]">+ {a.name}</p>
               ))}
+              {(item.ingredientes || []).map((o: any, idx: number) => (
+                <p key={`${o.ingredienteId || o.ingredienteNombre}-${idx}`} className="text-[10px] ml-3 text-[#757575]">
+                  · {o.ingredienteNombre}{o.cantidad > 1 ? ` x${o.cantidad}` : ''}{o.precio > 0 ? ` (+${formatCurrency(o.precio)})` : ''}
+                </p>
+              ))}
             </div>
           ))}
         </div>

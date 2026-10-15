@@ -9,7 +9,9 @@ export function printComanda(order: Order, shippingCost?: number, discount?: num
 
   const products = order.items.map((item) => {
     const adds = item.additionals?.map((a) => `<li style="margin:0;font-size:.9em">&#8627; ${a.name}</li>`).join('') || '';
-    return `<p style="margin:0;font-weight:bold"><strong>- ${item.title} x${item.quantity}</strong></p>${adds ? `<ul style="list-style:none;padding-left:15px;margin:5px 0">${adds}</ul>` : ''}`;
+    const opts = item.ingredientes?.map((o) => `<li style="margin:0;font-size:.9em">&#8226; ${o.ingredienteNombre}${o.cantidad > 1 ? ` x${o.cantidad}` : ''}${o.precio > 0 ? ` (+$${o.precio.toLocaleString('es-AR')})` : ''}</li>`).join('') || '';
+    const extras = adds || opts ? `<ul style="list-style:none;padding-left:15px;margin:5px 0">${opts}${adds}</ul>` : '';
+    return `<p style="margin:0;font-weight:bold"><strong>- ${item.title} x${item.quantity}</strong></p>${extras}`;
   }).join('');
 
   const address = order.deliveryType === 'delivery' && order.delivery?.address

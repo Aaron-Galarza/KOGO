@@ -22,6 +22,11 @@ export const menuService = {
       apiClient.get('/products').then((r) => r.data.data || [])
     ),
 
+  getProductDetail: (id: string): Promise<Product> =>
+    cached(`product-${id}`, TTL_SHORT, () =>
+      apiClient.get(`/products/${id}`).then((r) => r.data.data)
+    ),
+
   getCategories: (): Promise<Category[]> =>
     cached('categories', TTL_SHORT, () =>
       apiClient.get('/categories').then((r) => r.data.data || [])

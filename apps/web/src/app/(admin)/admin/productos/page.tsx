@@ -4,6 +4,8 @@ import { Package } from 'lucide-react';
 import { CategoriesManager } from '@/features/admin/productos/components/CategoriesManager';
 import { ProductsManager } from '@/features/admin/productos/components/ProductsManager';
 import { AdditionalsManager } from '@/features/admin/productos/components/AdditionalsManager';
+import { IngredientsManager } from '@/features/admin/productos/components/IngredientsManager';
+import { OptionGroupsManager } from '@/features/admin/productos/components/OptionGroupsManager';
 
 export default function ProductosPage() {
   return (
@@ -12,9 +14,11 @@ export default function ProductosPage() {
         <h1 className="text-xl sm:text-2xl font-extrabold font-[var(--font-montserrat)] text-[#212121] mb-1 flex items-center gap-2">
           <Package size={22} /> Menu
         </h1>
-        <p className="text-xs sm:text-sm text-[#757575] mb-4">Administra categorias, productos y adicionales del menu.</p>
+        <p className="text-xs sm:text-sm text-[#757575] mb-4">Administra categorias, ingredientes, grupos de opciones, productos y adicionales del menu.</p>
         <div className="space-y-6">
           <CategoriesManager />
+          <IngredientsManager />
+          <OptionGroupsManager />
           <ProductsManager />
           <AdditionalsManager />
         </div>

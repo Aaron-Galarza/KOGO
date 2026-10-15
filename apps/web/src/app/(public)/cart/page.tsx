@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { menuService } from '@/services/menu.service';
-import { Addon, Category } from '@/types';
+import { Addon, Category, CartItem as CartItemType } from '@/types';
 import { CartItem } from '@/features/cart/components/CartItem';
+import { ProductConfigurator } from '@/features/menu/components/ProductConfigurator';
 import { formatCurrency } from '@/utils/format';
 
 export default function CartPage() {
@@ -14,6 +15,7 @@ export default function CartPage() {
   const addToCart = useCartStore((s) => s.addToCart);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
   const updateCartItemAddOns = useCartStore((s) => s.updateCartItemAddOns);
+  const updateCartItemOptions = useCartStore((s) => s.updateCartItemOptions);
   const clearCart = useCartStore((s) => s.clearCart);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const getDiscount = useCartStore((s) => s.getDiscount);
@@ -24,6 +26,7 @@ export default function CartPage() {
   const [fadeIn, setFadeIn] = useState(false);
   const [additionals, setAdditionals] = useState<Addon[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [editItem, setEditItem] = useState<CartItemType | null>(null);
 
   useEffect(() => {
     setFadeIn(true);
@@ -57,9 +60,10 @@ export default function CartPage() {
         <div className="space-y-4">
           {items.map((item) => (
             <CartItem key={item.cartItemId} item={item} allAdditionals={additionals} allCategories={categories}
-              onIncrement={(addOns) => addToCart(item, addOns)}
+              onIncrement={() => addToCart(item, item.addOns ?? [], item.ingredientes ?? [])}
               onDecrement={removeFromCart}
               onUpdateAddOns={updateCartItemAddOns}
+              onEdit={() => setEditItem(item)}
               onRemove={(cartItemId) => {
                 // Remove all units of this item
                 const target = items.find((i) => i.cartItemId === cartItemId);
@@ -82,6 +86,14 @@ export default function CartPage() {
           <Link href="/checkout" className="block rounded-xl bg-[#D95A2B] px-7 py-3.5 text-center text-sm font-bold uppercase tracking-[0.05em] text-white shadow-[0_5px_15px_rgba(217,90,43,0.3)] transition-all duration-200 hover:-translate-y-[3px] hover:bg-[#D94B2B]">Confirmar Pedido</Link>
         </div>
       </div>
+
+      {editItem && (
+        <ProductConfigurator
+          product={editItem}
+          onConfirm={(_product, ingredientes) => updateCartItemOptions(editItem.cartItemId, ingredientes)}
+          onClose={() => setEditItem(null)}
+        />
+      )}
     </div>
   );
 }

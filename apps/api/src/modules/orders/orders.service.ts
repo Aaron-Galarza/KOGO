@@ -5,6 +5,8 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { ProductModel } from '../products/products.model';
 import { CategoriaModel } from '../categories/categories.model';
 import { AdicionalModel } from '../additionals/additionals.model';
+import { GROUP_POPULATE } from '../products/products.service';
+import { resolveProductConfiguration } from '../products/productConfig.resolver';
 import { validateProductConfiguration } from '../products/productOptions.service';
 import { CreateOrderInput } from './orders.schema';
 import { AppError } from '../../utils/appError';
@@ -22,7 +24,7 @@ export const OrdersService = {
     const stockDecrements: { productId: string; quantity: number }[] = [];
 
     for (const item of orderData.items) {
-      const product = await ProductModel.findById(item.productId);
+      const product = await ProductModel.findById(item.productId).populate(GROUP_POPULATE);
       if (!product || !product.active) {
         throw new AppError('Uno de los productos no está disponible', 400);
       }
@@ -63,12 +65,18 @@ export const OrdersService = {
         });
       }
 
-      const { options, optionsPrice } = validateProductConfiguration(
-        product,
-        item.selectedOptions || []
+      const configuracion = resolveProductConfiguration(product);
+      const { ingredientes, precioIngredientes } = validateProductConfiguration(
+        configuracion,
+        item.ingredientes || []
       );
 
-      subtotal += itemPrice + addonsPrice + optionsPrice;
+      const precioBaseUnidad = product.price;
+      const precioIngredientesUnidad = precioIngredientes;
+      const precioFinalUnidad = precioBaseUnidad + precioIngredientesUnidad;
+      const totalLinea = precioFinalUnidad * item.quantity;
+
+      subtotal += totalLinea + addonsPrice;
 
       validatedItems.push({
         productId: product._id.toString(),
@@ -76,7 +84,11 @@ export const OrdersService = {
         price: product.price,
         quantity: item.quantity,
         additionals,
-        options,
+        ingredientes,
+        precioBaseUnidad,
+        precioIngredientesUnidad,
+        precioFinalUnidad,
+        totalLinea,
       });
     }
 

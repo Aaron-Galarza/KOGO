@@ -44,8 +44,18 @@ export default function CheckoutPage() {
             <div key={item.cartItemId} className="py-1 border-b border-gray-100 last:border-0">
               <div className="flex justify-between text-sm text-[#4a5568]">
                 <span>{item.title || item.name} x{item.quantity}</span>
-                <span className="font-semibold">{formatCurrency(item.price * item.quantity)}</span>
+                <span className="font-semibold">{formatCurrency((item.price + (item.precioIngredientesUnidad || 0)) * item.quantity)}</span>
               </div>
+              {item.ingredientes.length > 0 && (
+                <div className="ml-2 text-xs text-[#757575]">
+                  {item.ingredientes.map((o) => (
+                    <div key={`${o.grupoId}.${o.ingredienteId}`} className="flex justify-between">
+                      <span>• {o.ingredienteNombre}{o.cantidad > 1 ? ` x${o.cantidad}` : ''}</span>
+                      <span>{o.precio > 0 ? formatCurrency(o.precio) : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {item.addOns.length > 0 && (
                 <div className="ml-2 text-xs text-[#757575]">
                   {item.addOns.map((a) => (

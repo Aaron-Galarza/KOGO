@@ -4,7 +4,6 @@ import { memo, useCallback } from 'react';
 import { cn } from '@/utils/cn';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Product } from '@/types';
-import { useCartStore } from '@/stores/cart.store';
 
 interface MenuSectionProps {
   category: string;
@@ -12,6 +11,7 @@ interface MenuSectionProps {
   className?: string;
   addedId?: string | null;
   priorityId?: string;
+  onProductAdd: (product: Product) => void;
 }
 
 function gridClass(count: number) {
@@ -21,9 +21,8 @@ function gridClass(count: number) {
   return 'grid-cols-1 md:grid-cols-3 lg:grid-cols-4';
 }
 
-export const MenuSection = memo(function MenuSection({ category, products, className = '', addedId, priorityId }: MenuSectionProps) {
-  const addToCart = useCartStore((s) => s.addToCart);
-  const handleAdd = useCallback((p: Product) => addToCart(p, []), [addToCart]);
+export const MenuSection = memo(function MenuSection({ category, products, className = '', addedId, priorityId, onProductAdd }: MenuSectionProps) {
+  const handleAdd = useCallback((p: Product) => onProductAdd(p), [onProductAdd]);
 
   if (products.length === 0) return null;
 

@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/common/SearchBar';
 import { ProductCardSkeleton } from '@/features/menu/components/ProductCardSkeleton';
 import { FeaturedBanner } from '@/features/menu/components/FeaturedBanner';
 import { MenuSection } from '@/components/blocks/menu-section';
+import { ProductConfigurator } from '@/features/menu/components/ProductConfigurator';
 
 function getCategoryName(cat: unknown): string {
   if (typeof cat === 'string') return cat;
@@ -28,6 +29,7 @@ export function MenuClient({ initialProducts, initialCategories }: MenuClientPro
   });
   const addToCart = useCartStore((s) => s.addToCart);
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [configProduct, setConfigProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -35,7 +37,15 @@ export function MenuClient({ initialProducts, initialCategories }: MenuClientPro
 
   const firstProductId = products.length > 0 ? String(products[0]._id) : undefined;
 
-  const onClick = useCallback((p: Product) => { addToCart(p, []); setAddedId(p._id); setTimeout(() => setAddedId(null), 800); }, [addToCart]);
+  const onClick = useCallback((p: Product) => {
+    if (p.tipoProducto === 'configurable') {
+      setConfigProduct(p);
+      return;
+    }
+    addToCart(p, []);
+    setAddedId(p._id);
+    setTimeout(() => setAddedId(null), 800);
+  }, [addToCart]);
 
   const grouped = useMemo(() => {
     if (selectedCategory) return null;
@@ -75,15 +85,27 @@ export function MenuClient({ initialProducts, initialCategories }: MenuClientPro
       ) : grouped ? (
         <div className="pt-2 md:pt-4">
           {grouped.map(([catName, catProducts]) => (
-            <MenuSection key={catName} category={catName} products={catProducts} addedId={addedId} priorityId={firstProductId} />
+            <MenuSection key={catName} category={catName} products={catProducts} addedId={addedId} priorityId={firstProductId} onProductAdd={onClick} />
           ))}
         </div>
       ) : (
         <div className="pt-2 md:pt-4">
-          <MenuSection category={selectedCategory ?? ''} products={products} addedId={addedId} priorityId={firstProductId} />
+          <MenuSection category={selectedCategory ?? ''} products={products} addedId={addedId} priorityId={firstProductId} onProductAdd={onClick} />
         </div>
       )}
       </div>
+
+      {configProduct && (
+        <ProductConfigurator
+          product={configProduct}
+          onConfirm={(prod, ingredientes) => {
+            addToCart(prod, [], ingredientes);
+            setAddedId(prod._id);
+            setTimeout(() => setAddedId(null), 800);
+          }}
+          onClose={() => setConfigProduct(null)}
+        />
+      )}
     </div>
   );
 }
