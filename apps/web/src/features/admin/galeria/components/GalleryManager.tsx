@@ -5,6 +5,7 @@ import { fetchGalleryImages, uploadGalleryImage, deleteGalleryImage } from '@/se
 import { GalleryImage } from '@/types';
 import { Image, Upload, Trash2, Search, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { Hint } from '@/features/admin/components/Hint';
 
 const PAGE_SIZE = 10;
 
@@ -40,7 +41,7 @@ export function GalleryManager() {
     e.preventDefault();
     if (!selectedFile) { showError('Selecciona una imagen'); return; }
     try { setUploading(true); const fd = new FormData(); fd.append('image', selectedFile); fd.append('title', title); fd.append('order', String(order)); await uploadGalleryImage(fd); showMsg('Imagen subida'); reset(); load(); }
-    catch (err: any) { showError(err.message || 'Error'); }
+    catch (err: any) { showError(err.response?.data?.error || err.message || 'Error'); }
     setUploading(false);
   };
   const del = async (id: string | undefined) => {
@@ -49,10 +50,7 @@ export function GalleryManager() {
   };
   const copyUrl = (url: string) => { navigator.clipboard.writeText(url); showMsg('URL copiada'); };
 
-  const filtered = search ? images.filter((img) => {
-    const name = (img as any).name || img.title || '';
-    return name.toLowerCase().includes(search.toLowerCase());
-  }) : images;
+  const filtered = search ? images.filter((img) => img.name.toLowerCase().includes(search.toLowerCase())) : images;
 
   const total = filtered.length;
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -67,11 +65,11 @@ export function GalleryManager() {
       {msg && <p className="text-green-600 mb-3 text-sm">{msg}</p>}
 
       <form onSubmit={submit} className="space-y-3 mb-6 border-b pb-6">
-        <h3 className="font-semibold text-[#212121] flex items-center gap-2"><Upload size={14} /> Subir nueva imagen</h3>
-        <input type="file" ref={fileRef} onChange={handleFile} accept="image/jpeg,image/png,image/webp,image/gif" required disabled={uploading}
+        <h3 className="font-semibold text-[#212121] flex items-center gap-2"><Upload size={14} /> Subir nueva imagen <Hint>Elegí una imagen (JPG, PNG, WEBP o GIF, hasta 10 MB). El título se guarda como nombre del archivo en Cloudinary, así que usá uno que te permita identificarlo. Los GIF solo se animan en el banner.</Hint></h3>
+        <input type="file" ref={fileRef} onChange={handleFile} accept="image/jpeg,image/png,image/webp,image/gif" required disabled={uploading} title="Elegir imagen"
           className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#D95A2B]" />
         {previewUrl && <div className="h-24 bg-gray-100 rounded-lg overflow-hidden"><img src={previewUrl} alt="Preview" className="h-full w-full object-cover" loading="lazy" /></div>}
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required disabled={uploading}
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo" required disabled={uploading} title="Nombre para identificar la imagen"
           className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B]" />
         <button type="submit" disabled={uploading || !selectedFile}
           className="px-6 py-2 bg-[#D95A2B] text-white rounded-lg font-semibold hover:bg-[#D94B2B] disabled:bg-gray-400 transition text-sm">
@@ -82,26 +80,29 @@ export function GalleryManager() {
       {/* Search */}
       <div className="relative mb-4">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#757575]" />
-        <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+        <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} title="Filtrar imágenes por título"
           placeholder="Buscar por nombre..." className="w-full pl-9 pr-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#D95A2B]" />
       </div>
 
       {paged.length === 0 ? <p className="text-[#757575] text-sm">No hay imagenes</p> : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {paged.map((img) => (
-            <div key={(img as any).id || (img as any)._id} className="relative group rounded-lg overflow-hidden">
+            <div key={img.id} className="relative group rounded-lg overflow-hidden">
               <div className="h-24 bg-gray-100">
-                <img src={(img as any).url || img.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                <img src={img.url} alt={img.name} className="h-full w-full object-cover" loading="lazy" />
               </div>
+              {(img.format === 'gif' || img.url.toLowerCase().endsWith('.gif')) && (
+                <span className="absolute bottom-7 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-white">GIF</span>
+              )}
               <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                <button onClick={() => copyUrl((img as any).url || img.imageUrl)} className="p-1.5 bg-blue-600/80 text-white rounded" title="Copiar URL">
+                <button onClick={() => copyUrl(img.url)} className="p-1.5 bg-blue-600/80 text-white rounded" title="Copiar URL">
                   <Copy size={12} />
                 </button>
-                <button onClick={() => del((img as any).id || img._id)} className="p-1.5 bg-red-600/80 text-white rounded">
+                <button onClick={() => del(img.id)} title="Eliminar imagen" className="p-1.5 bg-red-600/80 text-white rounded">
                   <Trash2 size={12} />
                 </button>
               </div>
-              <div className="p-1.5"><p className="text-xs font-semibold truncate">{(img as any).name || img.title}</p></div>
+              <div className="p-1.5"><p className="text-xs font-semibold truncate" title={img.name}>{img.name}</p></div>
             </div>
           ))}
         </div>

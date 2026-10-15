@@ -1,3 +1,34 @@
+export type ProductType = 'simple' | 'configurable';
+
+export interface OpcionConfigurable {
+  ingredienteId: string;
+  nombre: string;
+  descripcion?: string;
+  imagen?: string;
+  precio: number;
+  permiteCantidad: boolean;
+  cantidadMaxima: number;
+  orden: number;
+}
+
+export interface GrupoConfigurable {
+  grupoId: string;
+  nombre: string;
+  descripcion?: string;
+  tipo: 'unico' | 'multiple';
+  obligatorio: boolean;
+  minimo: number;
+  maximo: number;
+  orden: number;
+  ingredientes: OpcionConfigurable[];
+}
+
+export interface ConfiguracionProducto {
+  productoId: string;
+  tipoProducto: string;
+  grupos: GrupoConfigurable[];
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -14,6 +45,10 @@ export interface Product {
   tags?: string[];
   controlStock?: boolean;
   stock?: number;
+  tipoProducto?: ProductType;
+  order?: number;
+  gruposOpciones?: any[];
+  configuracion?: ConfiguracionProducto;
 }
 
 export interface Category {
@@ -44,9 +79,26 @@ export interface SelectedAddOn {
   quantity: number;
 }
 
+export interface OpcionElegida {
+  grupoId: string;
+  grupoNombre: string;
+  ingredienteId: string;
+  ingredienteNombre: string;
+  precio: number;
+  cantidad: number;
+}
+
+export interface OpcionElegidaInput {
+  grupoId: string;
+  ingredienteId: string;
+  cantidad?: number;
+}
+
 export interface CartItem extends Product {
   quantity: number;
   addOns: SelectedAddOn[];
+  ingredientes: OpcionElegida[];
+  precioIngredientesUnidad: number;
   cartItemId: string;
 }
 
@@ -89,6 +141,11 @@ export interface OrderItem {
   price: number;
   quantity: number;
   additionals?: OrderAddon[];
+  ingredientes?: OpcionElegida[];
+  precioBaseUnidad?: number;
+  precioIngredientesUnidad?: number;
+  precioFinalUnidad?: number;
+  totalLinea?: number;
 }
 
 export interface Order {
@@ -110,13 +167,18 @@ export interface Order {
 }
 
 export interface GalleryImage {
+  id: string;
+  name: string;
+  url: string;
+  createdAt?: string;
+  bytes?: number;
+  format?: string;
   _id?: string;
-  title: string;
-  imageUrl: string;
-  publicId: string;
-  order: number;
-  active: boolean;
-  createdAt?: Date;
+  title?: string;
+  imageUrl?: string;
+  publicId?: string;
+  order?: number;
+  active?: boolean;
   updatedAt?: Date;
 }
 
