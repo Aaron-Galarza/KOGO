@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { fetchAdminCategories, fetchAdminProducts, fetchAdminOptionGroups, createProduct, updateProduct, toggleProductActive, deleteProduct } from '@/services/admin.service';
+import { useState, useEffect, useRef } from 'react';
+import { fetchAdminCategories, fetchAdminProducts, fetchAdminOptionGroups, createProduct, updateProduct, toggleProductActive, deleteProduct, uploadGalleryImage } from '@/services/admin.service';
 import { Product, Category } from '@/types';
 import { formatCurrency } from '@/utils/format';
-import { Plus, Pencil, Trash2, Power, PowerOff, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Power, PowerOff, Package, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { Hint } from '@/features/admin/components/Hint';
+import { PRODUCT_IMAGE, describeLimits, validateImageFile } from '@/utils/image';
 
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,8 +27,34 @@ export function ProductsManager() {
   const [tipoProducto, setTipoProducto] = useState<'simple' | 'configurable'>('simple');
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { load(); }, []);
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const problem = await validateImageFile(file, PRODUCT_IMAGE);
+      if (problem) {
+        showError(problem);
+        if (fileRef.current) fileRef.current.value = '';
+        return;
+      }
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('title', title || file.name);
+      fd.append('purpose', 'product');
+      const uploaded = await uploadGalleryImage(fd);
+      setImage(uploaded.url);
+      showMsg('Foto lista: ya quedó cargada y optimizada');
+    } catch (err: any) {
+      showError(err.response?.data?.error || err.message || 'Error al subir la foto');
+    }
+    setUploading(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -43,6 +70,7 @@ export function ProductsManager() {
   const reset = () => {
     setTitle(''); setPrice(''); setDescription(''); setImage(''); setCategoryId(''); setStock(0); setControlStock(false);
     setTipoProducto('simple'); setGroupIds([]); setEditingId(null);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const toggleGroup = (id: string) => {
@@ -144,10 +172,23 @@ export function ProductsManager() {
 
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
-              Foto del producto <Hint>Link (URL) de la imagen. Opcional. Los GIF no se permiten en productos, solo en el banner.</Hint>
+              Foto del producto <Hint>Subila desde tu equipo o pegá el link (URL). {describeLimits(PRODUCT_IMAGE)} Los GIF no se permiten en productos, solo en el banner.</Hint>
             </label>
-            <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..."
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+            <div className="flex flex-col gap-2">
+              <input type="file" ref={fileRef} onChange={handleImageFile} accept={PRODUCT_IMAGE.accept} disabled={uploading} title="Subir foto del producto"
+                className="w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-[#D95A2B]" />
+              <div className="flex items-center gap-2">
+                <Upload size={14} className="shrink-0 text-[#757575]" />
+                <input type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..."
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
+              </div>
+              {uploading && <span className="text-xs text-[#757575]">Subiendo y optimizando...</span>}
+              {image && (
+                <div className="aspect-[6/5] w-40 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                  <img src={image} alt="Vista previa" className="h-full w-full object-cover" loading="lazy" />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

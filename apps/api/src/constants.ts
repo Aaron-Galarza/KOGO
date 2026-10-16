@@ -124,6 +124,29 @@ export const GEOCODE_BOUNDS = {
 // Tope mensual de consultas a la API de rutas (capa gratuita).
 export const ROUTES_MONTHLY_CAP = Number(process.env.GOOGLE_ROUTES_MONTHLY_CAP || 2500);
 
+// --- Galería de imágenes (Cloudinary) ---
+// Límites de subida: formato seguro, peso y resolución. Se aplican en el
+// backend (nunca en el navegador, que se puede saltear).
+export const GALLERY_FOLDER = 'KOGO';
+export const GALLERY_MAX_UPLOAD_MB = Number(process.env.GALLERY_MAX_SIZE_MB || 5);
+// Lado mayor mínimo y máximo aceptados (en px). Se mide el lado mayor para no
+// rechazar banners anchos y bajos.
+export const GALLERY_MIN_DIMENSION = Number(process.env.GALLERY_MIN_DIMENSION || 600);
+export const GALLERY_MAX_DIMENSION = Number(process.env.GALLERY_MAX_DIMENSION || 4000);
+// Formato final del derivado que se entrega: webp (liviano y compatible).
+export const GALLERY_DELIVERY_FORMAT = 'webp';
+// Ancho máximo del derivado de producto y de banner (nunca agranda).
+export const GALLERY_PRODUCT_MAX_WIDTH = 1600;
+export const GALLERY_BANNER_MAX_WIDTH = 1920;
+// Proporción canónica de las fotos de producto: la tarjeta usa la misma, así
+// que la imagen entra completa y nunca se ve recortada.
+export const GALLERY_PRODUCT_ASPECT_RATIO = { width: 6, height: 5 } as const;
+// Color del lienzo cuando la foto no llena la proporción canónica.
+export const GALLERY_PAD_BACKGROUND = 'white';
+// Tamaño de página por defecto de la galería del admin.
+export const GALLERY_PAGE_SIZE = 12;
+export const GALLERY_MAX_PAGE_SIZE = 48;
+
 export const ALLOWED_ORIGINS = (() => {
   const envOrigins = (process.env.CLIENT_URL || '')
     .split(',')

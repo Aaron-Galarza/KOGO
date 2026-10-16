@@ -20,7 +20,9 @@ export const ProductCard = memo(function ProductCard({ product, onAddClick, isAd
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative aspect-[6/5] w-full overflow-hidden bg-gradient-to-b from-[#3a2a1a] to-[#1a1008] sm:aspect-auto sm:h-48 md:h-52 lg:h-56">
+      {/* Misma proporción 6:5 que la foto que entrega el backend: así la imagen
+          entra completa y nunca se ve recortada. */}
+      <div className="relative aspect-[6/5] w-full overflow-hidden bg-gradient-to-b from-[#3a2a1a] to-[#1a1008]">
         {img ? (
           <Image src={img} alt={title} fill priority={priority} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw" className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-50' : ''}`} />
         ) : (
