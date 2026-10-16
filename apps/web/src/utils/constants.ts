@@ -13,6 +13,11 @@ export const TRANSFER_INFO = {
   holder: 'Ricardo Salas',
 } as const;
 
+// ── Pago online (Mercado Pago) ──────────────────────────────────────────────
+// Clave de localStorage con el último pedido online iniciado, usada como
+// respaldo por la página de retorno si Mercado Pago no devuelve el id en la URL.
+export const LAST_ONLINE_ORDER_KEY = 'kogo-last-online-order';
+
 // ── Días de la semana ───────────────────────────────────────────────────────
 export const CDAYS = [
   'monday',

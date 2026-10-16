@@ -84,7 +84,7 @@ export default function CheckoutPage() {
         </div>
 
         <DeliveryForm disabled={loading} />
-        <PaymentForm disabled={loading} />
+        <PaymentForm disabled={loading} onlinePayments />
         <CouponInput disabled={loading} />
         <CustomerForm onSubmit={handleCreateOrder} loading={loading} error={error} />
       </div>

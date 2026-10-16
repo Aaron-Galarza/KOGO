@@ -154,6 +154,7 @@ export interface Order {
   items: OrderItem[];
   deliveryType: 'pickup' | 'delivery';
   paymentMethod: 'cash' | 'transfer' | 'mercadopago';
+  paymentStatus?: 'not_required' | 'pending' | 'in_process' | 'approved' | 'rejected' | 'cancelled' | 'refunded';
   couponCode?: string | null;
   discountPercent: number;
   subtotal: number;
