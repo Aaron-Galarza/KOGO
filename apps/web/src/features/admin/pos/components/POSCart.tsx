@@ -24,9 +24,9 @@ export function POSCart({ onCheckout }: POSCartProps) {
       ? (item.category as any)._id || (item.category as any).name
       : item.category;
     return additionals.filter((a) => {
-      const cats = (a as any).categories ?? a.associatedProductCategories;
-      if (!cats || cats.length === 0) return true;
-      return catId ? cats.some((c: string) => String(c) === String(catId)) : true;
+      const cats = a.categories ?? [];
+      if (cats.length === 0) return true;
+      return catId ? cats.some((c) => String(c) === String(catId)) : true;
     });
   };
 
@@ -38,7 +38,7 @@ export function POSCart({ onCheckout }: POSCartProps) {
     const exists = current.find((a: any) => a._id === addon._id);
     const newAddOns = exists
       ? current.filter((a: any) => a._id !== addon._id)
-      : [...current, { _id: addon._id, name: addon.name || (addon as any).title || '', price: addon.price, quantity: 1 }];
+      : [...current, { _id: addon._id, name: addon.title || '', price: addon.price, quantity: 1 }];
     usePOSStore.getState().updateAddOns(itemId, newAddOns);
   };
 
@@ -89,7 +89,7 @@ export function POSCart({ onCheckout }: POSCartProps) {
                       return (
                         <button key={a._id} onClick={() => toggleAddon(id, a)}
                           className={`text-left p-1.5 rounded text-[10px] font-medium transition ${sel ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:border-[#D95A2B]'}`}>
-                          <div className="truncate">{a.name || (a as any).title}</div>
+                          <div className="truncate">{a.title}</div>
                           <div className={sel ? 'text-white/70' : 'text-[#D95A2B]'}>+{formatCurrency(a.price)}</div>
                         </button>
                       );

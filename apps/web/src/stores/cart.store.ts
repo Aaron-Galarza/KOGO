@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CartItem, SelectedAddOn, OpcionElegida, Coupon, Addon } from '@/types';
+import { CartItem, SelectedAddOn, OpcionElegida, Coupon } from '@/types';
 
 function normalizeOpcion(o: any): OpcionElegida {
   return {
@@ -128,59 +128,68 @@ export const useCartStore = create<CartState>()(
 
       updateCartItemAddOns: (oldCartItemId: string, newAddOns: SelectedAddOn[]) => {
         set((prev) => {
-          const item = prev.items.find((i) => i.cartItemId === oldCartItemId);
-          if (!item) return prev;
-
-          const newId = generateCartItemId(item._id, newAddOns);
           const idx = prev.items.findIndex((i) => i.cartItemId === oldCartItemId);
+          if (idx === -1) return prev;
+          const item = prev.items[idx];
 
-          // RAMA 1 — FUSIÓN: quitar TODOS los adicionales
+          // El id del carrito incluye SIEMPRE los ingredientes elegidos: si no, un
+          // producto configurable sin adicionales se fusionaba con el mismo
+          // producto "pelado" y se perdía la personalización.
+          const ingredientes = item.ingredientes ?? [];
+          const plainId = generateCartItemId(item._id, [], ingredientes);
+          const newId = generateCartItemId(item._id, newAddOns, ingredientes);
+
+          if (newId === oldCartItemId) return prev;
+
+          // RAMA 1 — FUSIÓN: quedó sin adicionales, vuelve a la línea "pelada".
           if (newAddOns.length === 0) {
             const plainIdx = prev.items.findIndex(
-              (i) =>
-                i.cartItemId === item._id &&
-                (!i.addOns || i.addOns.length === 0) &&
-                i.cartItemId !== oldCartItemId
+              (i, k) => k !== idx && i.cartItemId === plainId && getAddOns(i).length === 0
             );
+            const next = [...prev.items];
             if (plainIdx !== -1) {
-              const next = [...prev.items];
               next[plainIdx] = { ...next[plainIdx], quantity: next[plainIdx].quantity + item.quantity };
               next.splice(idx, 1);
               return { items: next };
             }
-            const next = [...prev.items];
             next[idx] = { ...item, addOns: [], cartItemId: newId };
             return { items: next };
           }
 
           // RAMA 2 — DIVISIÓN: ítem con quantity > 1, se personaliza 1 unidad
+          // y el resto vuelve a la línea sin adicionales.
           if (item.quantity > 1) {
-            const next = [...prev.items];
-            next[idx] = { ...item, quantity: item.quantity - 1, addOns: [], cartItemId: generateCartItemId(item._id, []) };
-            const personalized = { ...item, quantity: 1, addOns: newAddOns, cartItemId: newId };
-
-            const existingIdx = next.findIndex(
-              (i) => i.cartItemId === newId && i.cartItemId !== oldCartItemId
+            const next = prev.items.map((i, k) =>
+              k === idx ? { ...i, quantity: i.quantity - 1 } : i
             );
+
+            const plainIdx = next.findIndex(
+              (i, k) => k !== idx && i.cartItemId === plainId && getAddOns(i).length === 0
+            );
+            if (plainIdx !== -1) {
+              next[plainIdx] = { ...next[plainIdx], quantity: next[plainIdx].quantity + 1 };
+              next.splice(idx, 1);
+            } else {
+              next[idx] = { ...next[idx], addOns: [], cartItemId: plainId };
+            }
+
+            const existingIdx = next.findIndex((i) => i.cartItemId === newId);
             if (existingIdx !== -1) {
               next[existingIdx] = { ...next[existingIdx], quantity: next[existingIdx].quantity + 1 };
             } else {
-              next.splice(idx + 1, 0, personalized);
+              next.push({ ...item, quantity: 1, addOns: newAddOns, cartItemId: newId });
             }
             return { items: next };
           }
 
-          // RAMA 3 — ACTUALIZACIÓN SIMPLE: quantity=1, cambiar adicionales
-          const existingIdx = prev.items.findIndex(
-            (i) => i.cartItemId === newId && i.cartItemId !== oldCartItemId
-          );
+          // RAMA 3 — ACTUALIZACIÓN SIMPLE: quantity = 1, cambian sus adicionales.
+          const existingIdx = prev.items.findIndex((i, k) => k !== idx && i.cartItemId === newId);
+          const next = [...prev.items];
           if (existingIdx !== -1) {
-            const next = [...prev.items];
             next[existingIdx] = { ...next[existingIdx], quantity: next[existingIdx].quantity + 1 };
             next.splice(idx, 1);
             return { items: next };
           }
-          const next = [...prev.items];
           next[idx] = { ...item, addOns: newAddOns, cartItemId: newId };
           return { items: next };
         });

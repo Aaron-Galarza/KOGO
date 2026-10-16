@@ -5,7 +5,7 @@ import { resolveProductConfiguration } from './productConfig.resolver';
 
 export const GROUP_POPULATE = {
   path: 'gruposOpciones.grupo',
-  populate: { path: 'ingredientes.ingrediente', select: 'nombre descripcion precio imagen activo disponible orden' },
+  populate: { path: 'ingredientes.ingrediente', select: 'nombre descripcion precio activo disponible orden' },
 };
 
 export const ProductsService = {

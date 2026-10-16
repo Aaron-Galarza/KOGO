@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { menuService } from '@/services/menu.service';
 import { fetchAdminAddons, createAddon, updateAddon, toggleAddonActive, deleteAddon, fetchAdminCategories } from '@/services/admin.service';
 import { Addon, Category } from '@/types';
 import { formatCurrency } from '@/utils/format';

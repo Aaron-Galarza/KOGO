@@ -4,7 +4,6 @@ export interface IOpcion extends Document {
   nombre: string;
   descripcion?: string;
   precio: number;
-  imagen?: string;
   activo: boolean;
   disponible: boolean;
   orden: number;
@@ -27,9 +26,6 @@ const OpcionSchema = new Schema<IOpcion>(
       type: Number,
       default: 0,
       min: [0, 'El precio no puede ser negativo'],
-    },
-    imagen: {
-      type: String,
     },
     activo: {
       type: Boolean,

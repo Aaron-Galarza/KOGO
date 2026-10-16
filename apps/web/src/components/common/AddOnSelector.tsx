@@ -1,4 +1,5 @@
 import { cn } from '@/utils/cn';
+import { formatCurrency } from '@/utils/format';
 import { SelectedAddOn, IAddOn } from '@/types';
 
 interface AddOnSelectorProps {
@@ -31,7 +32,8 @@ export function AddOnSelector({
                 : 'border-[#e0e0e0] bg-white text-[#757575] hover:border-[#D95A2B]'
             )}
           >
-            {addon.name || (addon as any).title}
+            {addon.title}
+            {addon.price > 0 ? ` +${formatCurrency(addon.price)}` : ''}
           </button>
         );
       })}

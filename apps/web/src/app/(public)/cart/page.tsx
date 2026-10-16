@@ -30,8 +30,10 @@ export default function CartPage() {
 
   useEffect(() => {
     setFadeIn(true);
-    Promise.all([menuService.getAdditionals(), menuService.getCategories()])
-      .then(([a, c]) => { setAdditionals(a); setCategories(c); }).catch(() => {});
+    // Se cargan por separado: si una falla, la otra igual se muestra (antes un
+    // error en categorías dejaba también sin adicionales al carrito).
+    menuService.getAdditionals().then(setAdditionals).catch(() => {});
+    menuService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
   if (items.length === 0) {
