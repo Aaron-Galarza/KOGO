@@ -38,7 +38,15 @@ export function usePedidos() {
     const u1 = socketService.onOrderUpdated((d) => {
       setOrders((prev) => {
         if (d.orderId === getCurrentUpdatingId()) return prev;
-        const updated = prev.map((o) => o._id === d.orderId ? { ...o, status: d.status } : o);
+        const updated = prev.map((o) =>
+          o._id === d.orderId
+            ? {
+                ...o,
+                status: d.status ?? o.status,
+                ...(d.paymentStatus ? { paymentStatus: d.paymentStatus } : {}),
+              }
+            : o
+        );
         if (status) return updated.filter((o) => o.status === status);
         return updated;
       });

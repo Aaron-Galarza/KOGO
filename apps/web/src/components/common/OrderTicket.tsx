@@ -7,8 +7,28 @@ interface OrderTicketProps {
   order: Order;
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: 'EFECTIVO',
+  transfer: 'TRANSFERENCIA',
+  mercadopago: 'MERCADO PAGO',
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  approved: 'Pagado',
+  pending: 'Pendiente',
+  in_process: 'En proceso',
+  rejected: 'Rechazado',
+  cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
+};
+
 export function OrderTicket({ order }: OrderTicketProps) {
   const discount = (order.subtotal * order.discountPercent) / 100;
+  const paymentMethod = PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod;
+  const paymentStatus =
+    order.paymentMethod === 'mercadopago' && order.paymentStatus && order.paymentStatus !== 'not_required'
+      ? PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus
+      : null;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto print:shadow-none print:p-0">
@@ -73,7 +93,7 @@ export function OrderTicket({ order }: OrderTicketProps) {
 
       <div className="space-y-1 text-sm text-center mb-4 pb-4 border-b border-gray-300 text-[#4a5568]">
         <p><strong>Entrega:</strong> {order.deliveryType === 'pickup' ? 'RETIRO' : 'DOMICILIO'}</p>
-        <p><strong>Pago:</strong> {order.paymentMethod === 'cash' ? 'EFECTIVO' : 'TRANSFERENCIA'}</p>
+        <p><strong>Pago:</strong> {paymentMethod}{paymentStatus ? ` (${paymentStatus})` : ''}</p>
       </div>
     </div>
   );
