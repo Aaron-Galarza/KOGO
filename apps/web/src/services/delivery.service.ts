@@ -33,8 +33,14 @@ export const deliveryService = {
   // ── Admin ────────────────────────────────────────────────────────────────
   fetchConfig: () => apiClient.get('/delivery/config').then((r) => r.data.data as DeliveryConfig),
 
-  updateConfig: (payload: { maxDeliveryKm?: number; extraRain?: number; isRaining?: boolean }) =>
-    apiClient.put('/delivery/config', payload).then((r) => r.data.data as DeliveryConfig),
+  updateConfig: (payload: {
+    maxDeliveryKm?: number;
+    extraRain?: number;
+    isRaining?: boolean;
+    originLat?: number;
+    originLng?: number;
+    originLabel?: string;
+  }) => apiClient.put('/delivery/config', payload).then((r) => r.data.data as DeliveryConfig),
 
   updateRain: (isRaining: boolean, extraRain?: number) =>
     apiClient.patch('/delivery/config/rain', { isRaining, extraRain }).then((r) => r.data.data as DeliveryConfig),

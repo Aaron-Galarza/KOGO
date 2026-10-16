@@ -1,15 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Bike, CloudRain, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { Bike, CloudRain, Eraser, Loader2, MapPin, Plus, Save, Trash2 } from 'lucide-react';
 import { deliveryService } from '@/services/delivery.service';
-import { DeliveryConfig } from '@/types';
+import { DeliveryConfig, Coordinates } from '@/types';
 import { formatCurrency } from '@/utils/format';
 import { getApiError } from '@/utils/apiError';
+import { AddressAutocomplete } from '@/features/delivery/components/AddressAutocomplete';
+import { AddressMapPreview } from '@/features/delivery/components/AddressMapPreview';
+import { Hint } from '@/features/admin/components/Hint';
 
 /**
- * Configuración de envío (admin): tabla de precios por km, radio máximo y
- * recargo por lluvia. Estos valores son los que se cobran en el checkout.
+ * Configuración de envío (admin).
+ *
+ * El punto de partida es lo primero: desde ahí se miden los km, y de ahí salen
+ * el precio por tramo, el radio máximo y el recargo por lluvia. Todo se guarda
+ * en la base (no hay valores de ejemplo escondidos en el código).
  */
 export function DeliverySettings() {
   const [config, setConfig] = useState<DeliveryConfig | null>(null);
@@ -23,10 +29,20 @@ export function DeliverySettings() {
   const [newMaxKm, setNewMaxKm] = useState('');
   const [newPrice, setNewPrice] = useState('');
 
+  // Punto de partida
+  const [originAddress, setOriginAddress] = useState('');
+  const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
+
   const apply = useCallback((next: DeliveryConfig) => {
     setConfig(next);
     setMaxDeliveryKm(String(next.maxDeliveryKm));
     setExtraRain(String(next.extraRain));
+    setOriginAddress(next.originLabel || '');
+    setOriginCoords(
+      typeof next.originLat === 'number' && typeof next.originLng === 'number'
+        ? { lat: next.originLat, lng: next.originLng }
+        : null
+    );
   }, []);
 
   useEffect(() => {
@@ -51,12 +67,28 @@ export function DeliverySettings() {
     }
   };
 
+  const handleSaveOrigin = async () => {
+    if (!originCoords) {
+      setError('Buscá la dirección y elegila de la lista para fijar el punto de partida');
+      return;
+    }
+    await run(
+      () =>
+        deliveryService.updateConfig({
+          originLat: originCoords.lat,
+          originLng: originCoords.lng,
+          originLabel: originAddress.slice(0, 160),
+        }),
+      'Punto de partida actualizado'
+    );
+  };
+
   const handleAddRange = async () => {
     const km = parseFloat(newMaxKm);
     const price = parseFloat(newPrice);
     if (!Number.isFinite(km) || km <= 0) { setError('Los km deben ser mayores a 0'); return; }
     if (!Number.isFinite(price) || price < 0) { setError('El precio no puede ser negativo'); return; }
-    await run(() => deliveryService.addRange(km, price), 'Rango agregado');
+    await run(() => deliveryService.addRange(km, price), 'Tramo agregado');
     setNewMaxKm('');
     setNewPrice('');
   };
@@ -65,6 +97,26 @@ export function DeliverySettings() {
     const km = parseFloat(maxDeliveryKm);
     if (!Number.isFinite(km) || km <= 0) { setError('El radio máximo debe ser mayor a 0'); return; }
     await run(() => deliveryService.updateConfig({ maxDeliveryKm: km }), 'Radio de reparto actualizado');
+  };
+
+  const handleClearRanges = async () => {
+    if (!config || config.kmRanges.length === 0) return;
+    if (!confirm('¿Borrar todos los tramos de precio? El envío dejará de cobrarse automático.')) return;
+    setBusy(true);
+    setError(null);
+    setOkMessage(null);
+    try {
+      let last: DeliveryConfig | null = null;
+      for (const range of config.kmRanges) {
+        last = await deliveryService.deleteRange(range.id);
+      }
+      if (last) apply(last);
+      setOkMessage('Tabla vaciada');
+    } catch (err) {
+      setError(getApiError(err, 'No pudimos vaciar la tabla'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleToggleRain = async (isRaining: boolean) => {
@@ -95,16 +147,8 @@ export function DeliverySettings() {
         <Bike size={20} /> Envío a domicilio
       </h2>
       <p className="mb-4 text-xs sm:text-sm text-[#757575]">
-        Precios por distancia real desde el local. El sistema los recalcula al crear cada pedido.
+        Todo se calcula desde el punto de partida. El sistema recalcula el envío en cada pedido.
       </p>
-
-      <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-        <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-        <span>
-          <strong>Revisá estos valores:</strong> son los precios que se cobran en el checkout web.
-          Los que ves cargados son de ejemplo hasta que los ajustes.
-        </span>
-      </div>
 
       {error && (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
@@ -113,14 +157,64 @@ export function DeliverySettings() {
         <div className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">{okMessage}</div>
       )}
 
-      {/* Tabla de rangos */}
-      <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-[#757575]">Precios por km</h3>
+      {/* 1. Punto de partida */}
+      <h3 className="mb-2 flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-[#757575]">
+        <MapPin size={14} /> Punto de partida
+        <Hint>Desde acá se miden los kilómetros de cada reparto. Si te mudás, cambiá este punto y los precios se recalculan solos.</Hint>
+      </h3>
+      <div className="mb-3">
+        <AddressAutocomplete
+          value={originAddress}
+          hasCoordinates={Boolean(originCoords)}
+          onChange={(address) => {
+            setOriginAddress(address);
+            setOriginCoords(null);
+          }}
+          onSelect={(address, coordinates) => {
+            setOriginAddress(address);
+            setOriginCoords(coordinates);
+          }}
+          disabled={busy}
+          allowWithoutCoordinates={false}
+        />
+      </div>
+      {originCoords && (
+        <div className="mb-3">
+          <AddressMapPreview coordinates={originCoords} address={originAddress} />
+          <p className="mt-1 text-xs text-[#757575]">
+            {originCoords.lat.toFixed(6)}, {originCoords.lng.toFixed(6)}
+          </p>
+        </div>
+      )}
+      <button
+        type="button"
+        disabled={busy || !originCoords}
+        onClick={handleSaveOrigin}
+        className="mb-6 flex items-center gap-1 rounded-lg bg-gray-800 px-4 py-2 text-sm font-bold text-white transition hover:bg-gray-700 disabled:bg-gray-400"
+      >
+        <Save size={16} /> Guardar punto de partida
+      </button>
+
+      {/* 2. Tabla de precios */}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold uppercase tracking-wide text-[#757575]">Precios por km</h3>
+        {config && config.kmRanges.length > 0 && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleClearRanges}
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[#757575] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+          >
+            <Eraser size={13} /> Vaciar
+          </button>
+        )}
+      </div>
       <div className="mb-3 space-y-2">
         {config?.kmRanges.length === 0 && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-            Sin rangos cargados: el envío se coordina por WhatsApp. Agregá al menos uno.
-          </div>
+          <p className="rounded-lg border border-dashed border-gray-300 p-3 text-sm text-[#757575]">
+            Todavía no hay tramos cargados. Mientras no haya ninguno, el envío no se cobra
+            automático: el pedido avisa que se coordina.
+          </p>
         )}
         {config?.kmRanges.map((range) => (
           <div key={range.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
@@ -130,9 +224,9 @@ export function DeliverySettings() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => run(() => deliveryService.deleteRange(range.id), 'Rango eliminado')}
+              onClick={() => run(() => deliveryService.deleteRange(range.id), 'Tramo eliminado')}
               className="rounded p-1 text-[#757575] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-              aria-label={`Eliminar rango hasta ${range.maxKm} km`}
+              aria-label={`Eliminar tramo hasta ${range.maxKm} km`}
             >
               <Trash2 size={16} />
             </button>
@@ -140,7 +234,7 @@ export function DeliverySettings() {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-wrap items-end gap-2">
+      <div className="mb-6 flex flex-wrap items-end gap-2">
         <div>
           <label className="mb-1 block text-xs font-semibold text-[#757575]">Hasta (km)</label>
           <input
@@ -165,9 +259,9 @@ export function DeliverySettings() {
         </button>
       </div>
 
-      {/* Radio máximo */}
+      {/* 3. Radio máximo */}
       <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-[#757575]">Radio máximo de reparto</h3>
-      <div className="mb-4 flex items-end gap-2">
+      <div className="mb-6 flex items-end gap-2">
         <div>
           <label className="mb-1 block text-xs font-semibold text-[#757575]">Máximo (km)</label>
           <input
@@ -184,7 +278,7 @@ export function DeliverySettings() {
         </button>
       </div>
 
-      {/* Lluvia */}
+      {/* 4. Lluvia */}
       <h3 className="mb-2 flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-[#757575]">
         <CloudRain size={14} /> Recargo por lluvia
       </h3>

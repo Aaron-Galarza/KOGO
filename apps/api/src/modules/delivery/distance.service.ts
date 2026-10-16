@@ -28,6 +28,14 @@ export interface DistanceResult {
   source: DistanceSource;
 }
 
+/** Punto de partida de los repartos (configurable desde el admin). */
+export interface GeoOrigin {
+  lat: number;
+  lng: number;
+}
+
+const DEFAULT_ORIGIN: GeoOrigin = { lat: STORE_LAT, lng: STORE_LNG };
+
 const cache = new TtlCache<DistanceResult>(DISTANCE_CACHE_TTL_MS, DISTANCE_CACHE_MAX_ENTRIES);
 const counter = new MonthlyCounter(ROUTES_MONTHLY_CAP);
 
@@ -40,7 +48,11 @@ function getApiKey(): string | null {
   return process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_API_KEY || null;
 }
 
-async function googleDistanceKm(lat: number, lng: number): Promise<number | null> {
+async function googleDistanceKm(
+  lat: number,
+  lng: number,
+  origin: GeoOrigin
+): Promise<number | null> {
   const key = getApiKey();
   if (!key) return null;
   if (Date.now() < disabledUntil) return null;
@@ -51,7 +63,7 @@ async function googleDistanceKm(lat: number, lng: number): Promise<number | null
     const { data } = await axios.post(
       GOOGLE_ROUTES_API_URL,
       {
-        origin: { location: { latLng: { latitude: STORE_LAT, longitude: STORE_LNG } } },
+        origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
         destination: { location: { latLng: { latitude: lat, longitude: lng } } },
         travelMode: 'DRIVE',
         routingPreference: 'TRAFFIC_UNAWARE',
@@ -79,15 +91,22 @@ async function googleDistanceKm(lat: number, lng: number): Promise<number | null
 }
 
 export const DistanceService = {
-  async resolve(lat: number, lng: number): Promise<DistanceResult> {
-    const key = coordKey(lat, lng);
+  /**
+   * Distancia de manejo desde el punto de partida configurado hasta el destino.
+   * Si no se pasa origen se usa la ubicación por defecto del local.
+   */
+  async resolve(lat: number, lng: number, origin?: GeoOrigin): Promise<DistanceResult> {
+    const from = origin ?? DEFAULT_ORIGIN;
+    // La caché incluye el origen: si cambia el punto de partida, no se reusa
+    // una distancia calculada desde otro lado.
+    const key = `${coordKey(from.lat, from.lng)}>${coordKey(lat, lng)}`;
     const cached = cache.get(key);
     if (cached) return cached;
 
-    const googleKm = await googleDistanceKm(lat, lng);
+    const googleKm = await googleDistanceKm(lat, lng, from);
     const result: DistanceResult = googleKm
       ? { km: round2(googleKm), source: 'google' }
-      : { km: round2(estimateRoadKm(STORE_LAT, STORE_LNG, lat, lng)), source: 'estimado' };
+      : { km: round2(estimateRoadKm(from.lat, from.lng, lat, lng)), source: 'estimado' };
 
     cache.set(key, result);
     return result;
