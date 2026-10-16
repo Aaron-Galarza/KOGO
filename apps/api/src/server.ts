@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import app from './app';
 import { connectDB } from './config/db';
+import { PaymentsService } from './modules/payments/payments.service';
 import { DEFAULT_PORT, ALLOWED_ORIGINS } from './constants';
 
 declare global {
@@ -80,6 +81,15 @@ const startServer = async () => {
     httpServer.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
+
+    // Barrido periódico: libera el stock de pedidos online sin pagar tras expirar.
+    const PAYMENT_SWEEP_INTERVAL_MS = 60 * 1000;
+    setInterval(() => {
+      PaymentsService.sweepExpiredCheckouts().catch((err) =>
+        console.error('❌ Error en barrido de pagos vencidos:', err?.message)
+      );
+    }, PAYMENT_SWEEP_INTERVAL_MS);
+
     return { httpServer, io };
   } catch (error) {
     console.error('❌ Failed to start server:', error);

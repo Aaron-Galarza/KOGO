@@ -12,6 +12,24 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export const PAYMENT_METHODS = ['cash', 'transfer', 'mercadopago'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
+// --- Estado del pago (SEPARADO del estado del pedido) ---
+// not_required: el pedido no se cobra online (efectivo/transferencia), sin seguimiento
+// pending/in_process: pago online iniciado, esperando resolución del proveedor
+// approved: pago acreditado | rejected: rechazado | cancelled: expirado/anulado | refunded: devuelto
+export const PAYMENT_STATUSES = [
+  'not_required',
+  'pending',
+  'in_process',
+  'approved',
+  'rejected',
+  'cancelled',
+  'refunded',
+] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export const PAYMENT_PROVIDERS = ['mercadopago'] as const;
+export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
+
 export const DELIVERY_TYPES = ['pickup', 'delivery'] as const;
 export type DeliveryType = (typeof DELIVERY_TYPES)[number];
 
@@ -62,6 +80,13 @@ export const DEFAULT_DAILY_SCHEDULE: DefaultDaySchedule[] = [
 // --- Defaults de entorno ---
 export const DEFAULT_PORT = 4000;
 export const DEFAULT_CLIENT_URL = 'http://localhost:3000';
+
+// --- Mercado Pago (Checkout Pro vía Orders API) ---
+// El access token y el webhook secret viven SOLO en variables de entorno (nunca en código).
+export const MERCADOPAGO_API_BASE_URL = 'https://api.mercadopago.com';
+export const MERCADOPAGO_CURRENCY = 'ARS';
+// Tiempo que se reserva el stock de un pedido online sin pagar antes de liberarlo.
+export const PAYMENT_CHECKOUT_TTL_MINUTES = 15;
 
 export const ALLOWED_ORIGINS = (() => {
   const envOrigins = (process.env.CLIENT_URL || '')
