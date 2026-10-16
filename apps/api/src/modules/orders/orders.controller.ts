@@ -105,6 +105,7 @@ export class OrdersController {
         globalThis.io.to('kitchen').emit('order-updated', {
           orderId: order._id,
           status: order.status,
+          paymentStatus: order.paymentStatus,
           customer: order.customer.name,
         });
       }
