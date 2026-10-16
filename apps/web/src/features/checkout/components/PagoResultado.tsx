@@ -9,10 +9,10 @@ import { useCartStore } from '@/stores/cart.store';
 import { formatCurrency } from '@/utils/format';
 import { LAST_ONLINE_ORDER_KEY } from '@/utils/constants';
 
-type Variant = 'aprobado' | 'pendiente' | 'error';
+const POLL_INTERVAL_MS = 3000;
+const MAX_ATTEMPTS = 20; // ~60 s verificando contra el backend
 
-const POLL_INTERVAL_MS = 4000;
-const MAX_ATTEMPTS = 12; // ~48 s de verificación
+type Resolved = 'verificando' | 'aprobado' | 'pendiente' | 'error';
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -21,10 +21,12 @@ function errorMessage(err: unknown, fallback: string): string {
 /**
  * Página de retorno desde Mercado Pago.
  *
- * IMPORTANTE: el retorno del navegador NO confirma el pago. Esta pantalla solo
- * consulta al backend (que a su vez se confirma por webhook) y muestra el estado.
+ * IMPORTANTE: la URL de retorno NO confirma el pago. Esta pantalla arranca en
+ * "verificando" y solo muestra un resultado cuando el BACKEND informa un estado
+ * de pago (confirmado por webhook o por conciliación autenticada contra MP).
+ * El `variant` de la URL nunca se usa como verdad.
  */
-export function PagoResultado({ variant }: { variant: Variant }) {
+export function PagoResultado() {
   const searchParams = useSearchParams();
   const queryOrderId =
     searchParams.get('external_reference') ||
@@ -63,6 +65,7 @@ export function PagoResultado({ variant }: { variant: Variant }) {
         const current = await paymentsService.getStatus(orderId);
         if (!active) return;
         setStatus(current);
+        setError(null);
         const stillWaiting =
           current.paymentStatus === 'pending' || current.paymentStatus === 'in_process';
         if (stillWaiting && attemptsRef.current < MAX_ATTEMPTS) {
@@ -90,8 +93,7 @@ export function PagoResultado({ variant }: { variant: Variant }) {
     };
   }, [orderId]);
 
-  // Sin id de pedido no hay nada que verificar: se muestra un aviso y se evita
-  // llamar setState dentro del effect.
+  // Sin id de pedido no hay nada que verificar: se muestra un aviso.
   if (!orderId) {
     return (
       <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4 text-center">
@@ -114,16 +116,49 @@ export function PagoResultado({ variant }: { variant: Variant }) {
     );
   }
 
-  // El estado del backend manda; el `variant` de la URL es solo una pista inicial.
-  const resolved: Variant = status
+  // No se pudo consultar el estado: no se afirma nada sobre el pago.
+  if (error && !status) {
+    return (
+      <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <div className="bg-white rounded-2xl shadow-md p-8 max-w-md w-full">
+          <XCircle size={56} className="mx-auto mb-3 text-amber-500" />
+          <h1 className="text-2xl font-extrabold text-[#212121] font-[var(--font-montserrat)] mb-2">
+            No pudimos verificar el pago
+          </h1>
+          <p className="text-[#757575] mb-2">
+            No cierres esta pantalla: si ya pagaste, tu pedido se acredita igual con la
+            confirmación de Mercado Pago.
+          </p>
+          <p className="text-sm text-red-600 mb-6">{error}</p>
+          <Link
+            href={`/pago/pendiente?orderId=${orderId}`}
+            className="block w-full bg-[#D95A2B] text-white py-3 rounded-xl font-bold hover:bg-[#D94B2B]"
+          >
+            Volver a verificar
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // El resultado lo decide SIEMPRE el backend. Si todavía no hay estado, queda
+  // en "verificando": la URL nunca confirma el pago.
+  const resolved: Resolved = status
     ? status.paymentStatus === 'approved'
       ? 'aprobado'
       : status.paymentStatus === 'rejected' || status.paymentStatus === 'cancelled'
         ? 'error'
         : 'pendiente'
-    : variant;
+    : 'verificando';
 
   const config = {
+    verificando: {
+      Icon: Loader2,
+      iconClass: 'text-[#D95A2B] animate-spin',
+      title: 'Verificando el pago…',
+      message:
+        'Estamos confirmando tu pago con Mercado Pago. No cierres esta pantalla, se actualiza sola.',
+    },
     aprobado: {
       Icon: CheckCircle,
       iconClass: 'text-green-500',
@@ -160,10 +195,10 @@ export function PagoResultado({ variant }: { variant: Variant }) {
           </p>
         )}
 
-        {loading && !error && (
+        {loading && !error && resolved !== 'verificando' && (
           <div className="flex items-center justify-center gap-2 text-sm text-[#757575] mb-4">
             <Loader2 size={16} className="animate-spin" />
-            Verificando el estado del pago…
+            Actualizando el estado…
           </div>
         )}
 

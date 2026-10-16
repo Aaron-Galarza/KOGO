@@ -12,7 +12,7 @@ export default function PagoPendientePage() {
         </div>
       }
     >
-      <PagoResultado variant="pendiente" />
+      <PagoResultado />
     </Suspense>
   );
 }
