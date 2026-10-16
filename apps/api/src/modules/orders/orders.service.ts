@@ -199,6 +199,17 @@ export const OrdersService = {
         await AnalyticsService.revertDelivery(updated);
       }
 
+      // Regla de negocio: un pedido "delivered" está 100% del lado del cliente,
+      // por lo que el pago se da por acreditado (salvo que esté reembolsado).
+      if (
+        status === 'delivered' &&
+        updated.paymentStatus !== 'approved' &&
+        updated.paymentStatus !== 'refunded'
+      ) {
+        updated.paymentStatus = 'approved';
+        await updated.save();
+      }
+
       if (oldStatus !== 'cancelled' && status === 'cancelled') {
         for (const item of oldOrder.items) {
           const product = await ProductModel.findById(item.productId);
