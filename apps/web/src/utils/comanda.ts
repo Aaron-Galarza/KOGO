@@ -5,7 +5,7 @@ export function printComanda(order: Order, shippingCost?: number, discount?: num
   const time = new Date(order.createdAt || '').toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   const type = order.deliveryType === 'delivery' ? 'Envio' : 'Retiro';
-  const payment = order.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia';
+  const payment = order.paymentMethod === 'cash' ? 'Efectivo' : order.paymentMethod === 'transfer' ? 'Transferencia' : 'Mercado Pago';
 
   const products = order.items.map((item) => {
     const adds = item.additionals?.map((a) => `<li style="margin:0;font-size:.9em">&#8627; ${a.name}</li>`).join('') || '';
@@ -16,10 +16,18 @@ export function printComanda(order: Order, shippingCost?: number, discount?: num
 
   const address = order.deliveryType === 'delivery' && order.delivery?.address
     ? `<p style="margin:5px 0"><strong>Direccion:</strong> ${order.delivery.address}</p>` : '';
+  const distance = order.deliveryType === 'delivery' && order.delivery?.distanceKm
+    ? `<p style="margin:5px 0"><strong>Distancia:</strong> ${order.delivery.distanceKm} km</p>` : '';
 
-  const discountHtml = discount ? `<p style="font-size:1.1em;font-weight:bold">Descuento: <strong>-$${discount.toLocaleString('es-AR')}</strong></p>` : '';
-  const envioHtml = shippingCost ? `<p style="font-size:1.1em;font-weight:bold">Envio: <strong>$${shippingCost.toLocaleString('es-AR')}</strong></p>` : '';
-  const totalFinal = (order.total ?? 0) - (discount ?? 0) + (shippingCost ?? 0);
+  // Si no se pasan explícitamente, se derivan del propio pedido (el backend ya
+  // calculó el envío y el descuento al crearlo).
+  const subtotal = order.subtotal ?? order.total ?? 0;
+  const discountValue = discount ?? (subtotal * (order.discountPercent || 0)) / 100;
+  const shippingValue = shippingCost ?? (order.deliveryType === 'delivery' ? order.deliveryCost ?? 0 : 0);
+
+  const discountHtml = discountValue > 0 ? `<p style="font-size:1.1em;font-weight:bold">Descuento: <strong>-$${discountValue.toLocaleString('es-AR')}</strong></p>` : '';
+  const envioHtml = shippingValue > 0 ? `<p style="font-size:1.1em;font-weight:bold">Envio: <strong>$${shippingValue.toLocaleString('es-AR')}</strong></p>` : '';
+  const totalFinal = subtotal - discountValue + shippingValue;
 
   const html = `<!DOCTYPE html><html><head><title>Comanda</title><style>
     body{font-family:'Courier New',monospace;font-size:14px;line-height:1.2;margin:0;padding:10px}
@@ -36,13 +44,14 @@ export function printComanda(order: Order, shippingCost?: number, discount?: num
       <p><strong>Cliente:</strong> ${order.customer.name}</p>
       <p><strong>Telefono:</strong> ${order.customer.phone}</p>
       ${address}
+      ${distance}
     </div>
     <div class="sep"></div>
     <div>${products}</div>
     <div class="sep"></div>
     <div style="text-align:right">
       <p style="font-size:1.1em;font-weight:bold"><strong>Pago:</strong> ${payment}</p>
-      <p style="font-size:1.1em;font-weight:bold">Subtotal: <strong>$${order.total?.toLocaleString('es-AR') ?? '0'}</strong></p>
+      <p style="font-size:1.1em;font-weight:bold">Subtotal: <strong>$${subtotal.toLocaleString('es-AR')}</strong></p>
       ${discountHtml}
       ${envioHtml}
       <p style="font-size:1.2em"><strong>TOTAL: $${totalFinal.toLocaleString('es-AR')}</strong></p>

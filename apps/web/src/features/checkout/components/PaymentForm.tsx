@@ -10,6 +10,12 @@ interface PaymentFormProps {
    * Solo debe activarse en el checkout público: el POS nunca cobra online.
    */
   onlinePayments?: boolean;
+  /**
+   * Modo controlado (lo usa el POS, que tiene su propio store).
+   * Si se pasa `value`, el componente no toca el store del carrito público.
+   */
+  value?: 'cash' | 'transfer' | 'mercadopago' | null;
+  onChange?: (method: 'cash' | 'transfer' | 'mercadopago') => void;
 }
 
 const baseMethods = [
@@ -24,9 +30,15 @@ const onlineMethod = {
   Icon: CreditCard,
 } as const;
 
-export function PaymentForm({ disabled = false, onlinePayments = false }: PaymentFormProps) {
-  const paymentMethod = useCartStore((s) => s.paymentMethod);
-  const setPaymentMethod = useCartStore((s) => s.setPaymentMethod);
+export function PaymentForm({ disabled = false, onlinePayments = false, value, onChange }: PaymentFormProps) {
+  const storePaymentMethod = useCartStore((s) => s.paymentMethod);
+  const storeSetPaymentMethod = useCartStore((s) => s.setPaymentMethod);
+
+  const isControlled = value !== undefined || onChange !== undefined;
+  const paymentMethod = isControlled ? value ?? null : storePaymentMethod;
+  const setPaymentMethod = isControlled
+    ? (onChange ?? (() => {}))
+    : storeSetPaymentMethod;
 
   const methods = onlinePayments ? [...baseMethods, onlineMethod] : baseMethods;
 

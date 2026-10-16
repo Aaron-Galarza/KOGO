@@ -3,12 +3,15 @@
 import { useState } from 'react';
 import { X, Printer, Ticket } from 'lucide-react';
 import { usePOSCart } from '../hooks/usePOSCart';
-import { useCartStore } from '@/stores/cart.store';
+import { usePOSStore } from '@/stores/pos.store';
 import { ordersService } from '@/services/orders.service';
+import { updateOrderDeliveryCost } from '@/services/admin.service';
 import { couponsService } from '@/services/coupons.service';
 import { formatCurrency } from '@/utils/format';
 import { printComanda } from '@/utils/comanda';
-import { DeliveryForm } from '@/features/checkout/components/DeliveryForm';
+import { getApiError } from '@/utils/apiError';
+import { CartItem, Coupon, OpcionElegida, SelectedAddOn } from '@/types';
+import { DeliverySection } from '@/features/delivery/components/DeliverySection';
 import { PaymentForm } from '@/features/checkout/components/PaymentForm';
 import { ComandaPreview } from './ComandaPreview';
 
@@ -19,10 +22,21 @@ interface POSCheckoutProps {
 
 export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
   const { items, subtotal, clearCart } = usePOSCart();
-  const deliveryType = useCartStore((s) => s.deliveryType);
-  const paymentMethod = useCartStore((s) => s.paymentMethod);
-  const deliveryAddress = useCartStore((s) => s.deliveryAddress);
-  const [shippingCost, setShippingCost] = useState('');
+
+  // Estado de entrega y pago propio del POS (no comparte el carrito público).
+  const deliveryType = usePOSStore((s) => s.deliveryType);
+  const setDeliveryType = usePOSStore((s) => s.setDeliveryType);
+  const deliveryAddress = usePOSStore((s) => s.deliveryAddress);
+  const deliveryCoordinates = usePOSStore((s) => s.deliveryCoordinates);
+  const deliveryCost = usePOSStore((s) => s.deliveryCost);
+  const setDeliveryAddress = usePOSStore((s) => s.setDeliveryAddress);
+  const setDeliveryCost = usePOSStore((s) => s.setDeliveryCost);
+  const paymentMethod = usePOSStore((s) => s.paymentMethod);
+  const setPaymentMethod = usePOSStore((s) => s.setPaymentMethod);
+
+  // Costo de envío manual: solo se usa si el admin necesita corregir lo que
+  // calculó el backend (por ejemplo, una dirección fuera de la zona).
+  const [manualShipping, setManualShipping] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -30,7 +44,12 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
   const [useCoupon, setUseCoupon] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+
+  const holdPay = paymentMethod || 'cash';
+  const discountAmount = appliedCoupon ? (subtotal * appliedCoupon.discountPercent) / 100 : 0;
+  const shipping = deliveryType === 'delivery' ? deliveryCost : 0;
+  const total = subtotal - discountAmount + shipping;
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -38,64 +57,70 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
       const c = await couponsService.validateCoupon(couponCode, holdPay);
       setAppliedCoupon(c);
       setCouponMsg(`${c.code} - ${c.discountPercent}% desc`);
-    } catch (err: any) { setCouponMsg(err.message || 'Cupon invalido'); setAppliedCoupon(null); }
+    } catch (err) { setCouponMsg(getApiError(err, 'Cupon invalido')); setAppliedCoupon(null); }
   };
-
-  const holdPay = paymentMethod || 'cash';
-  const holdTotal = subtotal - ((subtotal * (appliedCoupon?.discountPercent || 0)) / 100);
 
   const createOrder = async () => {
     if (!name.trim()) { setError('Ingresa el nombre del cliente'); return; }
+
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone !== '00' && cleanPhone.length < 10) {
       setError('Telefono invalido (min 10 digitos). Usa "00" para pedidos rapidos sin telefono.');
       return;
     }
+    if (deliveryType === 'delivery' && deliveryAddress.trim().length < 5) {
+      setError('Ingresa la direccion de entrega');
+      return;
+    }
+
     try {
       setLoading(true); setError(null);
+
       const order = await ordersService.createOrder({
         customer: { name, phone: phone || '00' },
-        items: items.map((item: any) => ({
+        items: items.map((item: CartItem) => ({
           productId: item._id,
           title: item.title || item.name,
           price: item.price,
           quantity: item.quantity || 1,
-          additionals: (item.addOns || []).map((a: any) => ({
+          additionals: (item.addOns || []).map((a: SelectedAddOn) => ({
             name: a.name, addonId: a._id, price: a.price, quantity: a.quantity || 1,
           })),
-          ingredientes: (item.ingredientes || []).map((o: any) => ({
+          ingredientes: (item.ingredientes || []).map((o: OpcionElegida) => ({
             grupoId: o.grupoId, ingredienteId: o.ingredienteId, cantidad: o.cantidad || 1,
           })),
         })),
         deliveryType: deliveryType || 'pickup',
         paymentMethod: holdPay,
         deliveryAddress: deliveryAddress || null,
+        deliveryCoordinates: deliveryCoordinates || null,
         couponCode: appliedCoupon?.code || null,
       });
 
-      // Print comanda
-      const fakeOrder: any = {
-        _id: order._id,
-        customer: { name, phone },
-        createdAt: new Date().toISOString(),
-        items: items.map((item: any) => ({
-          title: item.title || item.name,
-          price: item.price,
-          quantity: item.quantity || 1,
-          additionals: (item.addOns || []).map((a: any) => ({ name: a.name, quantity: a.quantity || 1, price: a.price })),
-          ingredientes: (item.ingredientes || []).map((o: any) => ({ grupoNombre: o.grupoNombre, ingredienteNombre: o.ingredienteNombre, cantidad: o.cantidad || 1, precio: o.precio })),
-        })),
-        deliveryType: deliveryType || 'pickup',
-        paymentMethod: holdPay,
-        total: subtotal,
-        delivery: { address: deliveryAddress || '' },
-      };
-      const discountAmount = (subtotal * (appliedCoupon?.discountPercent || 0)) / 100;
-      printComanda(fakeOrder, parseFloat(shippingCost) || undefined, appliedCoupon ? discountAmount : undefined);
+      // Si el admin corrigió el envío a mano, se persiste y se imprime con ese valor.
+      const manual = parseFloat(manualShipping);
+      const overrideShipping = Number.isFinite(manual) && manual >= 0 ? manual : undefined;
+      let printed = order;
+
+      if (overrideShipping !== undefined && overrideShipping !== (order.deliveryCost ?? 0)) {
+        try {
+          printed = (await updateOrderDeliveryCost(order._id!, overrideShipping)) || {
+            ...order,
+            deliveryCost: overrideShipping,
+          };
+        } catch {
+          printed = { ...order, deliveryCost: overrideShipping };
+        }
+      }
+
+      printComanda(printed, printed.deliveryCost ?? 0);
       clearCart();
       setTimeout(() => { onSuccess(); onClose(); }, 800);
-    } catch (err: any) { setError(err.response?.data?.error || err.message || 'Error'); }
-    setLoading(false);
+    } catch (err) {
+      setError(getApiError(err, 'No pudimos crear el pedido'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,7 +128,7 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
       <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col shadow-xl">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-extrabold font-[var(--font-montserrat)] text-[#212121]">
-            Checkout - {formatCurrency(subtotal)}
+            Checkout - {formatCurrency(total)}
           </h2>
           <button onClick={onClose} className="text-[#757575] hover:text-[#212121]"><X size={20} /></button>
         </div>
@@ -111,8 +136,23 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 overflow-hidden">
           {/* Left: Forms */}
           <div className="md:col-span-2 overflow-y-auto pr-1 space-y-4">
-            <DeliveryForm disabled={loading} />
-            <PaymentForm disabled={loading} />
+            <DeliverySection
+              deliveryType={deliveryType}
+              onDeliveryTypeChange={setDeliveryType}
+              address={deliveryAddress}
+              coordinates={deliveryCoordinates}
+              onAddressChange={(address) => setDeliveryAddress(address, null)}
+              onAddressSelect={(address, coordinates) => setDeliveryAddress(address, coordinates)}
+              onQuote={setDeliveryCost}
+              disabled={loading}
+              hint="El envío lo calcula el sistema según la distancia; podés corregirlo en el panel de la comanda."
+            />
+
+            <PaymentForm
+              disabled={loading}
+              value={holdPay}
+              onChange={setPaymentMethod}
+            />
 
             <div className="bg-white rounded-lg p-4 shadow-md">
               <h2 className="text-lg font-bold mb-4 font-[var(--font-montserrat)] text-[#212121]">Datos del cliente</h2>
@@ -149,8 +189,15 @@ export function POSCheckout({ onClose, onSuccess }: POSCheckoutProps) {
           </div>
 
           {/* Right: Comanda preview */}
-          <ComandaPreview items={items} subtotal={subtotal} name={name} phone={phone}
-            shippingCost={shippingCost} appliedCoupon={appliedCoupon} onShippingChange={setShippingCost} />
+          <ComandaPreview
+            items={items}
+            subtotal={subtotal}
+            name={name}
+            phone={phone}
+            appliedCoupon={appliedCoupon}
+            manualShipping={manualShipping}
+            onManualShippingChange={setManualShipping}
+          />
         </div>
       </div>
     </div>

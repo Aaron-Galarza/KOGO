@@ -44,6 +44,8 @@ interface CartState {
   deliveryAddress: string;
   deliveryCoordinates: { lat: number; lng: number } | null;
   deliveryCost: number;
+  /** Distancia al local en km (la informa el backend al calcular el envío). */
+  distanceKm: number | null;
 
   addToCart: (product: any, addOns: SelectedAddOn[], ingredientes?: OpcionElegida[]) => void;
   removeFromCart: (cartItemId: string) => void;
@@ -54,8 +56,8 @@ interface CartState {
   setPaymentMethod: (m: 'cash' | 'transfer' | 'mercadopago') => void;
   setCoupon: (c: Coupon) => void;
   clearCoupon: () => void;
-  setDeliveryAddress: (a: string, c: { lat: number; lng: number }) => void;
-  setDeliveryCost: (c: number) => void;
+  setDeliveryAddress: (a: string, c: { lat: number; lng: number } | null) => void;
+  setDeliveryCost: (c: number, km: number | null) => void;
   clearDelivery: () => void;
   getSubtotal: () => number;
   getDiscount: () => number;
@@ -77,6 +79,7 @@ export const useCartStore = create<CartState>()(
       deliveryAddress: '',
       deliveryCoordinates: null,
       deliveryCost: 0,
+      distanceKm: null,
 
       addToCart: (product: any, addOns: SelectedAddOn[], ingredientes: OpcionElegida[] = []) => {
         set((prev) => {
@@ -217,14 +220,14 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      clearCart: () => set({ items: [], coupon: null, deliveryCost: 0, deliveryCoordinates: null, deliveryAddress: '', deliveryType: null, paymentMethod: null }),
+      clearCart: () => set({ items: [], coupon: null, deliveryCost: 0, deliveryCoordinates: null, deliveryAddress: '', deliveryType: null, paymentMethod: null, distanceKm: null }),
       setDeliveryType: (t) => { set({ deliveryType: t }); if (t === 'pickup') get().clearDelivery(); },
       setPaymentMethod: (m) => set({ paymentMethod: m }),
       setCoupon: (c) => set({ coupon: c }),
       clearCoupon: () => set({ coupon: null }),
-      setDeliveryAddress: (a, c) => set({ deliveryAddress: a, deliveryCoordinates: c }),
-      setDeliveryCost: (c) => set({ deliveryCost: c }),
-      clearDelivery: () => set({ deliveryAddress: '', deliveryCoordinates: null, deliveryCost: 0 }),
+      setDeliveryAddress: (a, c) => set({ deliveryAddress: a, deliveryCoordinates: c, deliveryCost: 0, distanceKm: null }),
+      setDeliveryCost: (c, km) => set({ deliveryCost: c, distanceKm: km }),
+      clearDelivery: () => set({ deliveryAddress: '', deliveryCoordinates: null, deliveryCost: 0, distanceKm: null }),
 
       getSubtotal: () =>
         get().items.reduce((sum, item: any) => {
@@ -241,7 +244,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'kogo-cart',
-      version: 4,
+      version: 5,
       skipHydration: true,
       migrate: (persisted: any) => {
         const raw = (persisted?.items || []).map((item: any) => {
@@ -266,7 +269,12 @@ export const useCartStore = create<CartState>()(
             merged.set(item.cartItemId, { ...item });
           }
         }
-        return { ...persisted, items: [...merged.values()] };
+        return {
+          ...persisted,
+          items: [...merged.values()],
+          distanceKm: persisted?.distanceKm ?? null,
+          deliveryCost: persisted?.deliveryCost ?? 0,
+        };
       },
     }
   )

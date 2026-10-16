@@ -1,21 +1,36 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { Loader2, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useCheckout } from '@/features/checkout/hooks/useCheckout';
 import { CustomerForm } from '@/features/checkout/components/CustomerForm';
-import { DeliveryForm } from '@/features/checkout/components/DeliveryForm';
+import { DeliverySection } from '@/features/delivery/components/DeliverySection';
 import { PaymentForm } from '@/features/checkout/components/PaymentForm';
 import { CouponInput } from '@/features/checkout/components/CouponInput';
 import { formatCurrency } from '@/utils/format';
-import { Loader2, ShoppingCart } from 'lucide-react';
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const getDiscount = useCartStore((s) => s.getDiscount);
   const getTotal = useCartStore((s) => s.getTotal);
+
+  const deliveryType = useCartStore((s) => s.deliveryType);
+  const setDeliveryType = useCartStore((s) => s.setDeliveryType);
+  const deliveryAddress = useCartStore((s) => s.deliveryAddress);
+  const deliveryCoordinates = useCartStore((s) => s.deliveryCoordinates);
+  const deliveryCost = useCartStore((s) => s.deliveryCost);
+  const setDeliveryAddress = useCartStore((s) => s.setDeliveryAddress);
+  const setDeliveryCost = useCartStore((s) => s.setDeliveryCost);
+
   const { handleCreateOrder, loading, error, redirecting } = useCheckout();
+
+  // Dirección escrita a mano sin ubicación exacta: el envío se coordina por
+  // WhatsApp, así que pedimos una confirmación explícita antes de seguir.
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const needsAddressConfirmation = deliveryType === 'delivery' && !deliveryCoordinates;
 
   if (items.length === 0) {
     return (
@@ -89,16 +104,54 @@ export default function CheckoutPage() {
                 <span>Descuento</span><span>-{formatCurrency(getDiscount())}</span>
               </div>
             )}
+            {deliveryType === 'delivery' && (
+              <div className="flex justify-between text-[#757575]">
+                <span>Envío</span>
+                <span>{deliveryCost > 0 ? formatCurrency(deliveryCost) : 'A coordinar'}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-bold text-[#D95A2B]">
               <span>Total</span><span>{formatCurrency(getTotal())}</span>
             </div>
           </div>
         </div>
 
-        <DeliveryForm disabled={loading} />
+        <DeliverySection
+          deliveryType={deliveryType}
+          onDeliveryTypeChange={setDeliveryType}
+          address={deliveryAddress}
+          coordinates={deliveryCoordinates}
+          onAddressChange={(address) => setDeliveryAddress(address, null)}
+          onAddressSelect={(address, coordinates) => setDeliveryAddress(address, coordinates)}
+          onQuote={setDeliveryCost}
+          disabled={loading}
+        />
+
         <PaymentForm disabled={loading} onlinePayments />
         <CouponInput disabled={loading} />
-        <CustomerForm onSubmit={handleCreateOrder} loading={loading} error={error} />
+
+        <CustomerForm
+          onSubmit={handleCreateOrder}
+          loading={loading}
+          error={error}
+          submitDisabled={needsAddressConfirmation && !addressConfirmed}
+          footerNote={
+            needsAddressConfirmation ? (
+              <label className="flex items-start gap-2 rounded-lg border-2 border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                <input
+                  type="checkbox"
+                  checked={addressConfirmed}
+                  onChange={(e) => setAddressConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-[#D95A2B]"
+                />
+                <span>
+                  Confirmo que la dirección <strong>«{deliveryAddress}»</strong> es correcta y acepto
+                  que el costo de envío se coordine por WhatsApp.
+                </span>
+              </label>
+            ) : null
+          }
+        />
       </div>
     </div>
   );

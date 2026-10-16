@@ -5,6 +5,13 @@ interface POSState {
   items: CartItem[];
   searchQuery: string;
   selectedCategory: string | null;
+  // Entrega: el POS maneja su propio estado (independiente del carrito público).
+  deliveryType: 'pickup' | 'delivery' | null;
+  deliveryAddress: string;
+  deliveryCoordinates: { lat: number; lng: number } | null;
+  deliveryCost: number;
+  distanceKm: number | null;
+  paymentMethod: 'cash' | 'transfer' | 'mercadopago' | null;
   addItem: (product: any, quantity: number, addons: SelectedAddOn[], ingredientes?: OpcionElegida[]) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
@@ -12,13 +19,25 @@ interface POSState {
   clearCart: () => void;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (categoryId: string | null) => void;
+  setDeliveryType: (type: 'pickup' | 'delivery') => void;
+  setDeliveryAddress: (address: string, coordinates: { lat: number; lng: number } | null) => void;
+  setDeliveryCost: (cost: number, distanceKm: number | null) => void;
+  clearDelivery: () => void;
+  setPaymentMethod: (method: 'cash' | 'transfer' | 'mercadopago') => void;
   getSubtotal: () => number;
+  getTotal: () => number;
 }
 
 export const usePOSStore = create<POSState>((set, get) => ({
   items: [],
   searchQuery: '',
   selectedCategory: null,
+  deliveryType: 'pickup',
+  deliveryAddress: '',
+  deliveryCoordinates: null,
+  deliveryCost: 0,
+  distanceKm: null,
+  paymentMethod: 'cash',
 
   addItem: (product: any, quantity: number, addons: SelectedAddOn[], ingredientes: OpcionElegida[] = []) => {
     if (product.controlStock === true) {
@@ -54,12 +73,38 @@ export const usePOSStore = create<POSState>((set, get) => ({
   },
 
   clearCart: () => {
-    set({ items: [] });
+    set({
+      items: [],
+      deliveryType: 'pickup',
+      deliveryAddress: '',
+      deliveryCoordinates: null,
+      deliveryCost: 0,
+      distanceKm: null,
+      paymentMethod: 'cash',
+    });
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   setSelectedCategory: (categoryId) => set({ selectedCategory: categoryId }),
+
+  setDeliveryType: (type) => {
+    set({ deliveryType: type });
+    if (type === 'pickup') get().clearDelivery();
+  },
+
+  setDeliveryAddress: (address, coordinates) => set({
+    deliveryAddress: address,
+    deliveryCoordinates: coordinates,
+    deliveryCost: 0,
+    distanceKm: null,
+  }),
+
+  setDeliveryCost: (cost, distanceKm) => set({ deliveryCost: cost, distanceKm }),
+
+  clearDelivery: () => set({ deliveryAddress: '', deliveryCoordinates: null, deliveryCost: 0, distanceKm: null }),
+
+  setPaymentMethod: (method) => set({ paymentMethod: method }),
 
   getSubtotal: () => {
     return get().items.reduce((sum, item) => {
@@ -68,5 +113,10 @@ export const usePOSStore = create<POSState>((set, get) => ({
       for (const op of item.ingredientes ?? []) price += op.precio * (op.cantidad || 1);
       return sum + price * item.quantity;
     }, 0);
+  },
+
+  getTotal: () => {
+    const state = get();
+    return state.getSubtotal() + (state.deliveryType === 'delivery' ? state.deliveryCost : 0);
   },
 }));
