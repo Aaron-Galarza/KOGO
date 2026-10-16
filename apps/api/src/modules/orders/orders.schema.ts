@@ -38,7 +38,19 @@ export const CreateOrderSchema = z.object({
     error: 'Método de pago inválido',
   }),
   couponCode: z.string().optional().nullable(),
-  deliveryAddress: z.string().optional().nullable(),
+  deliveryAddress: z
+    .string()
+    .max(200, 'La dirección es demasiado larga')
+    .optional()
+    .nullable(),
+  // Coordenadas (las valida el backend; el navegador NUNCA manda el precio).
+  deliveryCoordinates: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    })
+    .nullable()
+    .optional(),
 }).refine(
   (data) => {
     if (data.deliveryType === 'delivery') {

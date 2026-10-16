@@ -39,3 +39,25 @@ export const checkoutLimiter = rateLimit({
   legacyHeaders: false,
   message: standardResponse,
 });
+
+// Búsqueda de direcciones: cada consulta puede costar cuota de Google, así que
+// el límite es estricto por IP.
+export const geocodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Demasiadas búsquedas de direcciones. Esperá un momento y volvé a intentar.',
+  },
+});
+
+// Vista previa del costo de envío (cacheada en el server, pero igual acotada).
+export const deliveryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: standardResponse,
+});

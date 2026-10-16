@@ -39,6 +39,11 @@ export interface IOrderItem {
   totalLinea: number;
 }
 
+export interface IOrderCoordinates {
+  lat: number;
+  lng: number;
+}
+
 export interface IOrder extends Document {
   customer: {
     name: string;
@@ -56,6 +61,9 @@ export interface IOrder extends Document {
   status: OrderStatus;
   delivery?: {
     address?: string;
+    coordinates?: IOrderCoordinates;
+    /** Distancia real (o estimada) desde el local, en km. La calcula el backend. */
+    distanceKm?: number;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -161,6 +169,11 @@ const orderSchema = new Schema<IOrder>(
     },
     delivery: {
       address: { type: String },
+      coordinates: {
+        lat: { type: Number },
+        lng: { type: Number },
+      },
+      distanceKm: { type: Number },
     },
   },
   { timestamps: true }

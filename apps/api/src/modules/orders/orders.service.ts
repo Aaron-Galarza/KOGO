@@ -8,9 +8,21 @@ import { AdicionalModel } from '../additionals/additionals.model';
 import { GROUP_POPULATE } from '../products/products.service';
 import { resolveProductConfiguration } from '../products/productConfig.resolver';
 import { validateProductConfiguration } from '../products/productOptions.service';
+import { DeliveryService } from '../delivery/delivery.service';
 import { CreateOrderInput } from './orders.schema';
 import { AppError } from '../../utils/appError';
 import { ORDER_STATUSES, OrderStatus } from '../../constants';
+
+/** Limpia la dirección recibida: nunca se guarda HTML ni texto sin límite. */
+function sanitizeAddress(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const clean = value
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
+  return clean || undefined;
+}
 
 export const OrdersService = {
   createOrder: async (orderData: CreateOrderInput): Promise<IOrder> => {
@@ -109,12 +121,25 @@ export const OrdersService = {
     }
 
     let deliveryCost = 0;
-    let delivery = undefined;
+    let delivery: IOrder['delivery'] = undefined;
 
     if (orderData.deliveryType === 'delivery') {
-      delivery = {
-        address: orderData.deliveryAddress || undefined,
-      };
+      const address = sanitizeAddress(orderData.deliveryAddress);
+      const coords = orderData.deliveryCoordinates || null;
+
+      delivery = { address };
+
+      // El costo de envío SIEMPRE lo calcula el backend con las coordenadas
+      // reales: se ignora cualquier precio que venga del navegador.
+      if (coords) {
+        delivery.coordinates = { lat: coords.lat, lng: coords.lng };
+        const quote = await DeliveryService.calculateSafe(coords.lat, coords.lng);
+        if (quote) {
+          delivery.distanceKm = quote.distanceKm;
+          // 0 cuando está fuera de cobertura: el envío se coordina a mano.
+          deliveryCost = quote.deliveryCost;
+        }
+      }
     }
 
     const total = subtotal - discountAmount + deliveryCost;
