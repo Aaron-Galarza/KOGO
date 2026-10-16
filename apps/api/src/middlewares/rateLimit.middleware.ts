@@ -11,6 +11,8 @@ export const apiLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: standardResponse,
+  // El webhook de Mercado Pago se excluye: MP reintenta y no debe bloquearse.
+  skip: (req) => req.path === '/payments/webhook',
 });
 
 export const authLimiter = rateLimit({
@@ -24,6 +26,15 @@ export const authLimiter = rateLimit({
 export const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: standardResponse,
+});
+
+// Inicio de pagos online: más laxo que crear pedidos, pero acotado.
+export const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 40,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: standardResponse,

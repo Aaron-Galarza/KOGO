@@ -2,9 +2,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 import {
   ORDER_STATUSES,
   PAYMENT_METHODS,
+  PAYMENT_STATUSES,
   DELIVERY_TYPES,
   OrderStatus,
   PaymentMethod,
+  PaymentStatus,
   DeliveryType,
 } from '../../constants';
 
@@ -45,6 +47,7 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   deliveryType: DeliveryType;
   paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
   couponCode?: string | null;
   discountPercent: number;
   subtotal: number;
@@ -118,6 +121,12 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       enum: PAYMENT_METHODS,
       required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: PAYMENT_STATUSES,
+      default: 'not_required',
+      index: true,
     },
     couponCode: {
       type: String,
