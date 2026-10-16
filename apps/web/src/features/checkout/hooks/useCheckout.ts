@@ -26,6 +26,8 @@ export function useCheckout() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // true mientras se está redirigiendo a Mercado Pago (para mostrar el aviso).
+  const [redirecting, setRedirecting] = useState(false);
   // Pedido online ya creado cuyo checkout no llegó a iniciarse: permite reintentar el pago
   // sin volver a crear la orden (evita pedidos duplicados).
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export function useCheckout() {
         const { checkoutUrl } = await paymentsService.createCheckout(pendingOrderId);
         rememberOrder(pendingOrderId);
         clearCart();
+        setRedirecting(true);
         window.location.href = checkoutUrl;
         return;
       }
@@ -100,6 +103,7 @@ export function useCheckout() {
           const { checkoutUrl } = await paymentsService.createCheckout(order._id);
           rememberOrder(order._id);
           clearCart();
+          setRedirecting(true);
           window.location.href = checkoutUrl;
           return;
         } catch (payErr) {
@@ -123,5 +127,5 @@ export function useCheckout() {
     }
   };
 
-  return { handleCreateOrder, loading, error };
+  return { handleCreateOrder, loading, error, redirecting };
 }

@@ -64,6 +64,14 @@ export const PHONE = '+54 9 3794 20-1646';
 export const WHATSAPP_NUMBER = '5493794201646';
 export const WHATSAPP_MESSAGE = 'Hola KOGO! Quiero hacer un pedido de comida coreana 🍜';
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+
+// Aviso al negocio por WhatsApp sobre un pedido puntual (p. ej. pago online no
+// acreditado). Usa el número del negocio con un mensaje precargado.
+export function whatsappOrderUrl(orderId?: string | null): string {
+  const ref = orderId ? ` (pedido #${String(orderId).slice(-6).toUpperCase()})` : '';
+  const msg = `Hola KOGO! Consulto por mi pedido${ref}. No se registró el pago online y quiero coordinar.`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
 export const GOOGLE_MAPS_EMBED =
   'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d885.0183705887081!2d-58.83767523033696!3d-27.46697159852008!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94456d9a92b13741%3A0x88c9bb11c6772785!2sKOGO%20%7C%20Korean%20Street%20Food!5e0!3m2!1ses-419!2sar!4v1791905887546!5m2!1ses-419!2sar';
 export const GOOGLE_MAPS_URL =
