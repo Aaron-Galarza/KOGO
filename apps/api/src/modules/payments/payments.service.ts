@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import { Order } from '../orders/orders.model';
+import { Order, IOrder } from '../orders/orders.model';
 import { OrdersService } from '../orders/orders.service';
 import { PaymentModel } from './payments.model';
 import { MercadoPagoClient } from './mercadopago.client';
@@ -17,6 +17,23 @@ import { MERCADOPAGO_CURRENCY, PAYMENT_CHECKOUT_TTL_MINUTES, PaymentStatus } fro
 // Estados de pago todavía no resueltos: en ellos tiene sentido conciliar
 // activamente contra Mercado Pago (además de esperar el webhook).
 const UNRESOLVED_PAYMENT_STATUSES: PaymentStatus[] = ['pending', 'in_process'];
+
+// Avisa a cocina/administración que cambió el estado de pago de un pedido, para
+// que el listado del admin se actualice en vivo (sin recargar la página).
+function notifyOrderPaymentUpdated(order: IOrder): void {
+  const io = (
+    globalThis as {
+      io?: { to: (room: string) => { emit: (event: string, payload: unknown) => void } };
+    }
+  ).io;
+  if (!io || !order?._id) return;
+  io.to('kitchen').emit('order-updated', {
+    orderId: order._id,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    customer: order.customer?.name,
+  });
+}
 
 export const PaymentsService = {
   /**
@@ -278,6 +295,7 @@ export const PaymentsService = {
     if (canTransitionPaymentStatus(order.paymentStatus, nextStatus)) {
       order.paymentStatus = nextStatus;
       await order.save();
+      notifyOrderPaymentUpdated(order);
     }
   },
 };
