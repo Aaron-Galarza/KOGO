@@ -1,20 +1,34 @@
 'use client';
 
 import { useCartStore } from '@/stores/cart.store';
-import { Banknote, Building2 } from 'lucide-react';
+import { Banknote, Building2, CreditCard } from 'lucide-react';
 
 interface PaymentFormProps {
   disabled?: boolean;
+  /**
+   * Muestra la opción de pago online con Mercado Pago.
+   * Solo debe activarse en el checkout público: el POS nunca cobra online.
+   */
+  onlinePayments?: boolean;
 }
 
-const methods = [
+const baseMethods = [
   { value: 'cash', label: 'Efectivo', description: 'Al retiro/entrega', Icon: Banknote },
   { value: 'transfer', label: 'Transferencia', description: 'Al confirmar pedido', Icon: Building2 },
 ] as const;
 
-export function PaymentForm({ disabled = false }: PaymentFormProps) {
+const onlineMethod = {
+  value: 'mercadopago',
+  label: 'Pagar online con Mercado Pago',
+  description: 'Tarjeta, débito o dinero en cuenta',
+  Icon: CreditCard,
+} as const;
+
+export function PaymentForm({ disabled = false, onlinePayments = false }: PaymentFormProps) {
   const paymentMethod = useCartStore((s) => s.paymentMethod);
   const setPaymentMethod = useCartStore((s) => s.setPaymentMethod);
+
+  const methods = onlinePayments ? [...baseMethods, onlineMethod] : baseMethods;
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-md">
