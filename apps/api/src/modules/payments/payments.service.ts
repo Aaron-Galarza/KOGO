@@ -14,6 +14,10 @@ import { verifyMercadoPagoSignature } from './payments.webhook';
 import { AppError } from '../../utils/appError';
 import { MERCADOPAGO_CURRENCY, PAYMENT_CHECKOUT_TTL_MINUTES, PaymentStatus } from '../../constants';
 
+// Estados de pago todavía no resueltos: en ellos tiene sentido conciliar
+// activamente contra Mercado Pago (además de esperar el webhook).
+const UNRESOLVED_PAYMENT_STATUSES: PaymentStatus[] = ['pending', 'in_process'];
+
 export const PaymentsService = {
   /**
    * Inicia el pago online de un pedido existente y devuelve la URL de checkout.
@@ -122,17 +126,53 @@ export const PaymentsService = {
     return { checkoutUrl: mp.checkoutUrl, paymentId: payment._id.toString() };
   },
 
-  /** Estado de pago mínimo para la página de retorno (NO confirma nada por sí solo). */
+  /**
+   * Estado de pago mínimo para la página de retorno.
+   *
+   * NO confirma nada por sí solo y NUNCA confía en el navegador. Si el pago
+   * online sigue sin resolverse, concilia activamente contra Mercado Pago
+   * (consulta autenticada del backend) para no depender del momento en que
+   * llegue el webhook. Así la pantalla de retorno refleja la verdad sin
+   * necesidad de recargar.
+   */
   getPaymentStatus: async (orderId: string) => {
     if (!mongoose.isValidObjectId(orderId)) {
       throw new AppError('Pedido inválido', 400);
     }
 
-    const order = await Order.findById(orderId).select(
+    let order = await Order.findById(orderId).select(
       'paymentMethod paymentStatus status total'
     );
     if (!order) {
       throw new AppError('Pedido no encontrado', 404);
+    }
+
+    // Conciliación activa: si el pago sigue pendiente, se consulta a MP.
+    if (
+      order.paymentMethod === 'mercadopago' &&
+      UNRESOLVED_PAYMENT_STATUSES.includes(order.paymentStatus)
+    ) {
+      const payment = await PaymentModel.findOne({
+        orderId: order._id,
+        mpOrderId: { $ne: null },
+        status: { $in: UNRESOLVED_PAYMENT_STATUSES },
+      }).sort({ createdAt: -1 });
+
+      if (payment?.mpOrderId) {
+        try {
+          await PaymentsService.reconcilePaymentFromMercadoPago(payment.mpOrderId);
+        } catch (error: any) {
+          // Si Mercado Pago no responde, se devuelve el último estado conocido.
+          console.warn(
+            `[MP] No se pudo conciliar el pago del pedido ${order._id.toString()}:`,
+            error?.message
+          );
+        }
+        order =
+          (await Order.findById(order._id).select(
+            'paymentMethod paymentStatus status total'
+          )) ?? order;
+      }
     }
 
     return {
@@ -181,13 +221,15 @@ export const PaymentsService = {
   },
 
   /**
-   * Procesa una notificación (webhook) de Mercado Pago.
+   * Concilia el estado del pago consultando la Order en Mercado Pago.
    *
-   * Flujo: consulta la Order en MP (nunca confía en el body), valida que el
-   * pago coincida con el pedido local, y actualiza de forma idempotente.
-   * Responde igual ante duplicados: aplicar dos veces el mismo evento es seguro.
+   * Se usa desde el webhook y desde la conciliación activa al consultar el
+   * estado (ver `getPaymentStatus`). Nunca confía en el body del navegador:
+   * consulta a MP con las credenciales del backend, valida que el pago coincida
+   * con el pedido local y actualiza de forma idempotente. Aplicar dos veces el
+   * mismo evento es seguro.
    */
-  processWebhook: async (mpOrderId: string): Promise<void> => {
+  reconcilePaymentFromMercadoPago: async (mpOrderId: string): Promise<void> => {
     const mp = await MercadoPagoClient.getOrder(mpOrderId);
 
     // Buscar el pago local por id de MP o, si no, por la referencia externa.
@@ -198,7 +240,7 @@ export const PaymentsService = {
         : null);
 
     if (!payment) {
-      console.warn(`[MP] Webhook para una orden desconocida: ${mp.id}`);
+      console.warn(`[MP] Notificación para una orden desconocida: ${mp.id}`);
       return;
     }
 

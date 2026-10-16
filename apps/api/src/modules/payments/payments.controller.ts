@@ -14,6 +14,8 @@ export class PaymentsController {
   static getStatus = asyncHandler(async (req: Request, res: Response) => {
     const orderId = req.params.orderId as string;
     const result = await PaymentsService.getPaymentStatus(orderId);
+    // El estado de pago cambia con el tiempo: esta respuesta no debe cachearse.
+    res.set('Cache-Control', 'no-store');
     sendSuccess(res, result);
   });
 
@@ -59,7 +61,7 @@ export class PaymentsController {
     }
 
     try {
-      await PaymentsService.processWebhook(dataId);
+      await PaymentsService.reconcilePaymentFromMercadoPago(dataId);
     } catch (err) {
       console.error('[MP] Error procesando webhook:', (err as Error)?.message);
       // 500 hace que Mercado Pago reintente la notificación.
