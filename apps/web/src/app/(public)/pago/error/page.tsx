@@ -12,7 +12,7 @@ export default function PagoErrorPage() {
         </div>
       }
     >
-      <PagoResultado variant="error" />
+      <PagoResultado />
     </Suspense>
   );
 }

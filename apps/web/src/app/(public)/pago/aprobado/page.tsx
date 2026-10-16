@@ -12,7 +12,7 @@ export default function PagoAprobadoPage() {
         </div>
       }
     >
-      <PagoResultado variant="aprobado" />
+      <PagoResultado />
     </Suspense>
   );
 }
