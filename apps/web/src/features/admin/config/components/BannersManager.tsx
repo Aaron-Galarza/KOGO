@@ -6,6 +6,7 @@ import { fetchAdminBanners, createBanner, updateBanner, toggleBannerActive, dele
 import { Banner } from '@/types';
 import { useToast } from '@/hooks/useToast';
 import { Hint } from '@/features/admin/components/Hint';
+import { BANNER_IMAGE, describeLimits, validateImageFile } from '@/utils/image';
 
 export function BannersManager() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -35,9 +36,17 @@ export function BannersManager() {
     if (!f) return;
     try {
       setUploading(true);
+      const problem = await validateImageFile(f, BANNER_IMAGE);
+      if (problem) {
+        showError(problem);
+        if (fileRef.current) fileRef.current.value = '';
+        setUploading(false);
+        return;
+      }
       const fd = new FormData();
       fd.append('image', f);
       fd.append('title', title || f.name);
+      fd.append('purpose', 'banner');
       const uploaded = await uploadGalleryImage(fd);
       setImage(uploaded.url);
       showMsg(f.type === 'image/gif' ? 'GIF subido (se reproduce animado en el banner)' : 'Imagen subida');
@@ -87,10 +96,10 @@ export function BannersManager() {
         </div>
         <div>
           <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
-            Imagen <Hint>Subí una imagen o GIF desde tu equipo, o pegá el link (URL). Los GIF se reproducen animados en el banner.</Hint>
+            Imagen <Hint>Subí una imagen o GIF desde tu equipo, o pegá el link (URL). Los GIF se reproducen animados en el banner. {describeLimits(BANNER_IMAGE)}</Hint>
           </label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input type="file" ref={fileRef} onChange={handleFile} accept="image/gif,image/jpeg,image/png,image/webp" disabled={uploading} title="Subir imagen o GIF"
+            <input type="file" ref={fileRef} onChange={handleFile} accept={BANNER_IMAGE.accept} disabled={uploading} title="Subir imagen o GIF"
               className="w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-[#D95A2B]" />
             {uploading && <span className="text-xs text-[#757575] whitespace-nowrap">Subiendo...</span>}
           </div>

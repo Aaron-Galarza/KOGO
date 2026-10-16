@@ -179,13 +179,14 @@ export interface GalleryImage {
   createdAt?: string;
   bytes?: number;
   format?: string;
-  _id?: string;
-  title?: string;
-  imageUrl?: string;
-  publicId?: string;
-  order?: number;
-  active?: boolean;
-  updatedAt?: Date;
+  width?: number;
+  height?: number;
+}
+
+export interface GalleryPage {
+  images: GalleryImage[];
+  nextCursor: string | null;
+  totalCount?: number;
 }
 
 export interface StoreConfig {

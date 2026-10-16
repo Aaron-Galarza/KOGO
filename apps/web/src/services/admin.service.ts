@@ -215,11 +215,16 @@ export const fetchAnalyticsOrders = (range: AdminRange = 'today', paymentFilter 
 };
 
 // ── Gallery ───────────────────────────────────────────────────────────────────
-export const fetchGalleryImages = () =>
-  apiClient.get('/gallery').then((r) => r.data.data);
+// Paginación real: solo se piden las imágenes que se van a mostrar (el listado
+// devuelve `nextCursor` para la página siguiente).
+export const fetchGalleryImages = (params: { limit?: number; cursor?: string } = {}) =>
+  apiClient.get('/gallery', { params }).then((r) => r.data.data);
 
 export const uploadGalleryImage = (formData: FormData) =>
   apiClient.post('/gallery', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data.data);
+
+export const renameGalleryImage = (imageId: string, name: string) =>
+  apiClient.patch(`/gallery/${encodeURIComponent(imageId)}`, { name }).then((r) => r.data.data);
 
 export const deleteGalleryImage = (imageId: string) =>
   apiClient.delete(`/gallery/${encodeURIComponent(imageId)}`).then((r) => r.data.data);

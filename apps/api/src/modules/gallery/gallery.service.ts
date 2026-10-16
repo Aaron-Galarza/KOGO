@@ -1,10 +1,30 @@
-import {
-  v2 as cloudinary,
-  UploadApiResponse,
-} from 'cloudinary';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { AppError } from '../../utils/appError';
+import {
+  GALLERY_DELIVERY_FORMAT,
+  GALLERY_FOLDER,
+  GALLERY_PAGE_SIZE,
+  GALLERY_MAX_PAGE_SIZE,
+} from '../../constants';
+import {
+  buildTransformation,
+  checkDimensions,
+  cleanName,
+  detectImageFormat,
+  isFormatAllowed,
+  normalizePublicId,
+  GalleryPurpose,
+  PURPOSE_LABELS,
+} from './gallery.utils';
 
-const GALLERY_FOLDER = 'KOGO';
+// ============================================================
+// Galería: las imágenes viven en Cloudinary (no en Mongo), así que no hay
+// colección que migrar. La API solo lista, sube, renombra y borra.
+//
+// El archivo original se guarda UNA vez y la optimización (webp + proporción
+// 6:5 para productos) se pide por URL: Cloudinary genera el derivado la primera
+// vez y lo sirve cacheado desde su CDN. Así no se paga dos veces por lo mismo.
+// ============================================================
 
 export interface GalleryImage {
   id: string;
@@ -13,14 +33,24 @@ export interface GalleryImage {
   createdAt?: string;
   bytes?: number;
   format?: string;
+  width?: number;
+  height?: number;
 }
 
-interface SearchResource {
+export interface GalleryPage {
+  images: GalleryImage[];
+  nextCursor: string | null;
+  /** Total de imágenes en la galería (aproximado, lo informa Cloudinary). */
+  totalCount?: number;
+}
+
+interface CloudinaryResource {
   public_id: string;
-  secure_url: string;
   created_at: string;
   bytes: number;
   format?: string;
+  width?: number;
+  height?: number;
 }
 
 let configured = false;
@@ -43,21 +73,6 @@ const ensureConfig = (): void => {
   configured = true;
 };
 
-const cleanName = (originalName: string): string =>
-  originalName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\.(gif|jpe?g|png|webp|avif|heic|bmp|tiff?|svg)$/i, '')
-    .replace(/[^a-zA-Z0-9_-]+/g, '_')
-    .slice(0, 80)
-    .replace(/^_+|_+$/g, '') || 'imagen';
-
-const isGif = (file: Express.Multer.File): boolean =>
-  file.mimetype === 'image/gif' ||
-  file.originalname.toLowerCase().endsWith('.gif') ||
-  file.buffer.toString('ascii', 0, 6) === 'GIF87a' ||
-  file.buffer.toString('ascii', 0, 6) === 'GIF89a';
-
 const friendlyName = (publicId: string): string => publicId.split('/').pop() || publicId;
 
 const isDuplicateError = (error: unknown): boolean => {
@@ -65,11 +80,31 @@ const isDuplicateError = (error: unknown): boolean => {
   return err?.http_code === 409 || /already exists/i.test(String(err?.message || ''));
 };
 
-const runUpload = (
-  file: Express.Multer.File,
-  publicId: string,
-  gif: boolean
-): Promise<UploadApiResponse> =>
+/** URL de entrega optimizada (Cloudinary la genera y cachea en su CDN). */
+const deliveryUrl = (publicId: string, purpose: GalleryPurpose, animated: boolean): string =>
+  cloudinary.url(publicId, {
+    secure: true,
+    resource_type: 'image',
+    transformation: buildTransformation(purpose, animated),
+    ...(animated ? {} : { format: GALLERY_DELIVERY_FORMAT }),
+  });
+
+const toGalleryImage = (resource: CloudinaryResource, purpose: GalleryPurpose = 'product'): GalleryImage => {
+  const animated = resource.format === 'gif';
+
+  return {
+    id: resource.public_id,
+    name: friendlyName(resource.public_id),
+    url: deliveryUrl(resource.public_id, purpose, animated),
+    createdAt: resource.created_at,
+    bytes: resource.bytes,
+    format: animated ? 'gif' : GALLERY_DELIVERY_FORMAT,
+    width: resource.width,
+    height: resource.height,
+  };
+};
+
+const runUpload = (file: Express.Multer.File, publicId: string): Promise<UploadApiResponse> =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -77,12 +112,7 @@ const runUpload = (
         public_id: publicId,
         unique_filename: false,
         overwrite: false,
-        ...(gif
-          ? {}
-          : {
-              format: 'webp',
-              transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-            }),
+        resource_type: 'image',
       },
       (error, uploadResult) => {
         if (error || !uploadResult) {
@@ -95,66 +125,120 @@ const runUpload = (
     stream.end(file.buffer);
   });
 
-const toGalleryImage = (resource: SearchResource): GalleryImage => ({
-  id: resource.public_id,
-  name: friendlyName(resource.public_id),
-  url: resource.secure_url,
-  createdAt: resource.created_at,
-  bytes: resource.bytes,
-  format: resource.format,
-});
-
 export const GalleryService = {
-  uploadImage: async (file: Express.Multer.File, title?: string): Promise<GalleryImage> => {
-    ensureConfig();
+  validateUpload(file: Express.Multer.File, purpose: GalleryPurpose): void {
+    const format = detectImageFormat(file.buffer);
 
-    const gif = isGif(file);
+    if (!isFormatAllowed(format, purpose)) {
+      throw new AppError(
+        `Formato no permitido. Se aceptan ${PURPOSE_LABELS[purpose]}.`,
+        400
+      );
+    }
+  },
+
+  uploadImage: async (
+    file: Express.Multer.File,
+    title?: string,
+    purpose: GalleryPurpose = 'product'
+  ): Promise<GalleryImage> => {
+    ensureConfig();
+    GalleryService.validateUpload(file, purpose);
+
+    const format = detectImageFormat(file.buffer);
+    const animated = format === 'gif';
     const base = cleanName(title || file.originalname);
 
     let result: UploadApiResponse;
     try {
-      result = await runUpload(file, base, gif);
+      result = await runUpload(file, base);
     } catch (error) {
       if (!isDuplicateError(error)) {
         throw new AppError('No se pudo subir la imagen', 500);
       }
-      result = await runUpload(file, `${base}_${Date.now().toString(36)}`, gif);
+      result = await runUpload(file, `${base}_${Date.now().toString(36)}`);
+    }
+
+    const dimensions = checkDimensions(result.width, result.height);
+    if (!dimensions.ok) {
+      // No se deja guardada una imagen que no cumple: se borra y se informa.
+      await cloudinary.uploader.destroy(result.public_id).catch(() => undefined);
+      throw new AppError(dimensions.message, 400);
     }
 
     return {
       id: result.public_id,
       name: friendlyName(result.public_id),
-      url: result.secure_url,
+      url: deliveryUrl(result.public_id, purpose, animated),
       createdAt: result.created_at,
       bytes: result.bytes,
-      format: result.format,
+      format: animated ? 'gif' : GALLERY_DELIVERY_FORMAT,
+      width: result.width,
+      height: result.height,
     };
   },
 
-  getGalleryImages: async (): Promise<GalleryImage[]> => {
+  /** Página de a favor del cursor: el navegador solo recibe lo que va a mostrar. */
+  getGalleryImages: async (
+    options: { limit?: number; cursor?: string; purpose?: GalleryPurpose } = {}
+  ): Promise<GalleryPage> => {
     ensureConfig();
 
-    const result = await cloudinary.search
+    const limit = Math.min(Math.max(options.limit || GALLERY_PAGE_SIZE, 1), GALLERY_MAX_PAGE_SIZE);
+    const purpose = options.purpose || 'product';
+
+    let query = cloudinary.search
       .expression(`resource_type:image AND folder:${GALLERY_FOLDER}`)
-      .max_results(100)
-      .execute();
+      .sort_by('created_at', 'desc')
+      .max_results(limit);
 
-    const resources = (result.resources || []) as unknown as SearchResource[];
+    if (options.cursor) query = query.next_cursor(options.cursor);
 
-    return resources.map(toGalleryImage).sort((a, b) => a.name.localeCompare(b.name));
+    const result = (await query.execute()) as {
+      resources?: CloudinaryResource[];
+      next_cursor?: string;
+      total_count?: number;
+    };
+
+    return {
+      images: (result.resources || []).map((resource) => toGalleryImage(resource, purpose)),
+      nextCursor: result.next_cursor || null,
+      totalCount: result.total_count,
+    };
+  },
+
+  /** Cambia solo el nombre (public_id) de la imagen: no se vuelve a subir nada. */
+  renameImage: async (imageId: string, newName: string): Promise<GalleryImage> => {
+    ensureConfig();
+
+    const fromId = normalizePublicId(imageId);
+    if (!fromId) throw new AppError('Id de imagen inválido', 400);
+
+    const base = cleanName(newName);
+    // La imagen se queda donde está: si hoy no tiene carpeta, no se le agrega.
+    const folder = fromId.includes('/') ? `${fromId.slice(0, fromId.lastIndexOf('/'))}/` : '';
+    let toId = `${folder}${base}`;
+
+    if (toId !== fromId) {
+      try {
+        await cloudinary.uploader.rename(fromId, toId, { overwrite: false, invalidate: true });
+      } catch (error) {
+        if (!isDuplicateError(error)) {
+          throw new AppError('No se pudo renombrar la imagen', 500);
+        }
+        toId = `${folder}${base}_${Date.now().toString(36)}`;
+        await cloudinary.uploader.rename(fromId, toId, { overwrite: false, invalidate: true });
+      }
+    }
+
+    const resource = (await cloudinary.api.resource(toId)) as unknown as CloudinaryResource;
+    return toGalleryImage(resource);
   },
 
   deleteImage: async (imageId: string): Promise<void> => {
     ensureConfig();
 
-    let decodedId = imageId;
-    try {
-      decodedId = decodeURIComponent(imageId);
-    } catch {
-      decodedId = imageId;
-    }
-
-    const safeId = decodedId.replace(/[^a-zA-Z0-9_/-]/g, '');
+    const safeId = normalizePublicId(imageId);
     if (!safeId) {
       throw new AppError('Id de imagen inválido', 400);
     }
