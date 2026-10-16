@@ -9,9 +9,12 @@ import { ALLOWED_ORIGINS } from './constants';
 
 const app: Express = express();
 
-// En producción la API suele estar detrás de un proxy (Render, Railway, nginx).
-// Sin esto, todas las peticiones se ven como una sola IP y el rate limit se dispara.
-const trustProxyValue = process.env.TRUST_PROXY ?? (process.env.NODE_ENV === 'production' ? '1' : 'false');
+// En producción la API siempre está detrás de un proxy (Render, Railway, nginx)
+// y en desarrollo no debería haber X-Forwarded-For. Por defecto se confía en un
+// hop (`1`): si no, express-rate-limit no puede identificar la IP real y dispara
+// el ValidationError ERR_ERL_UNEXPECTED_X_FORWARDED_FOR. Se puede desactivar con
+// TRUST_PROXY=false.
+const trustProxyValue = process.env.TRUST_PROXY ?? '1';
 app.set('trust proxy', trustProxyValue === 'false' ? false : Number(trustProxyValue));
 
 // Middlewares de seguridad
