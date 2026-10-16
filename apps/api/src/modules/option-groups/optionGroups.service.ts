@@ -3,7 +3,7 @@ import { makeCrud } from '../../utils/crudFactory';
 
 const POPULATE = {
   path: 'ingredientes.ingrediente',
-  select: 'nombre descripcion precio imagen activo disponible orden',
+  select: 'nombre descripcion precio activo disponible orden',
 };
 
 export const OptionGroupsService = {

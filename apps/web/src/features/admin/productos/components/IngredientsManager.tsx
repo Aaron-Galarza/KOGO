@@ -15,7 +15,6 @@ export function IngredientsManager() {
   const [nombre, setNombre] = useState('');
   const [precio, setPrecio] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [imagen, setImagen] = useState('');
   const [disponible, setDisponible] = useState(true);
   const [orden, setOrden] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,12 +29,12 @@ export function IngredientsManager() {
     setLoading(false);
   };
 
-  const reset = () => { setNombre(''); setPrecio(''); setDescripcion(''); setImagen(''); setDisponible(true); setOrden(0); setEditingId(null); };
+  const reset = () => { setNombre(''); setPrecio(''); setDescripcion(''); setDisponible(true); setOrden(0); setEditingId(null); };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = { nombre, precio: parseFloat(precio), descripcion, imagen, disponible, orden };
+      const payload = { nombre, precio: parseFloat(precio), descripcion, disponible, orden };
       if (editingId) {
         await updateOption(editingId, payload);
         showMsg('Ingrediente actualizado');
@@ -51,7 +50,6 @@ export function IngredientsManager() {
     setNombre(o.nombre || '');
     setPrecio(String(o.precio ?? 0));
     setDescripcion(o.descripcion || '');
-    setImagen(o.imagen || '');
     setDisponible(o.disponible !== false);
     setOrden(o.orden ?? 0);
     setEditingId(o._id);
@@ -100,14 +98,6 @@ export function IngredientsManager() {
             </label>
             <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Descripción (opcional)" rows={2}
               className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none resize-none" />
-          </div>
-
-          <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#212121]">
-              Foto <Hint>Link (URL) de la imagen. Opcional.</Hint>
-            </label>
-            <input type="url" value={imagen} onChange={(e) => setImagen(e.target.value)} placeholder="https://..."
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#D95A2B] focus:outline-none" />
           </div>
 
           <div className="flex items-end gap-4">

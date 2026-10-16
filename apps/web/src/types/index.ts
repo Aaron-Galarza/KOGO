@@ -4,7 +4,6 @@ export interface OpcionConfigurable {
   ingredienteId: string;
   nombre: string;
   descripcion?: string;
-  imagen?: string;
   precio: number;
   permiteCantidad: boolean;
   cantidadMaxima: number;
@@ -59,15 +58,16 @@ export interface Category {
   order?: number;
 }
 
+/** Adicional tal como lo devuelve la API (colección `additionals`). */
 export interface IAddOn {
   _id: string;
-  name: string;
-  description?: string;
+  title: string;
   price: number;
-  imageUrl?: string;
-  category: string;
-  isActive: boolean;
-  associatedProductCategories: string[];
+  /** Categorías donde se ofrece. Vacío = disponible en todas. */
+  categories?: string[];
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type Addon = IAddOn;

@@ -7,7 +7,6 @@ export interface ResolvedOption {
   ingredienteId: string;
   nombre: string;
   descripcion?: string;
-  imagen?: string;
   precio: number;
   permiteCantidad: boolean;
   cantidadMaxima: number;
@@ -56,7 +55,6 @@ export function resolveProductConfiguration(product: IProduct): ResolvedConfigur
         ingredienteId: String(ing._id),
         nombre: ing.nombre,
         descripcion: ing.descripcion,
-        imagen: ing.imagen,
         precio: go.precioEspecial != null ? go.precioEspecial : ing.precio,
         permiteCantidad: !!go.permiteCantidad,
         cantidadMaxima: go.cantidadMaxima ?? 1,

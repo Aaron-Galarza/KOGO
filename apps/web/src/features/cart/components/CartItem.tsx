@@ -16,11 +16,16 @@ interface CartItemProps {
   onRemove: (cartItemId: string) => void;
 }
 
+// La categoría del producto puede venir como objeto populado, como id o como
+// nombre. Se resuelve siempre al _id para poder cruzar contra los adicionales.
 function getProductCategoryId(pc: unknown, cats: Category[]): string | null {
-  if (typeof pc === 'object' && pc !== null && '_id' in pc) return (pc as { _id: string })._id;
-  const name = String(pc);
-  const found = cats.find((c) => c.name === name);
-  return found?._id ?? null;
+  if (typeof pc === 'object' && pc !== null && '_id' in pc) {
+    const obj = pc as { _id?: string; name?: string };
+    if (obj._id) return obj._id;
+    return obj.name ? cats.find((c) => c.name === obj.name)?._id ?? null : null;
+  }
+  const value = String(pc);
+  return cats.find((c) => c._id === value)?._id ?? cats.find((c) => c.name === value)?._id ?? null;
 }
 
 export function CartItem({
@@ -29,10 +34,10 @@ export function CartItem({
 }: CartItemProps) {
   const title = item.title || item.name;
   const img = item.image || item.imageUrl;
-  const addOns = (item as any).addOns ?? (item as any).addons ?? [];
+  const addOns: SelectedAddOn[] = item.addOns ?? [];
   const ingredientes = item.ingredientes ?? [];
-  const addOnsTotal = addOns.reduce((s: number, a: any) => s + a.price * (a.quantity || 1), 0);
-  const ingredientesTotal = ingredientes.reduce((s: number, o: any) => s + o.precio * (o.cantidad || 1), 0);
+  const addOnsTotal = addOns.reduce((s, a) => s + a.price * (a.quantity || 1), 0);
+  const ingredientesTotal = ingredientes.reduce((s, o) => s + o.precio * (o.cantidad || 1), 0);
   const subtotal = (item.price + ingredientesTotal) * item.quantity + addOnsTotal;
   const isConfigurable = item.tipoProducto === 'configurable' || ingredientes.length > 0;
   const catId = getProductCategoryId(item.category, allCategories);
@@ -40,20 +45,18 @@ export function CartItem({
   const atMaxStock = item.quantity >= maxStock;
 
   const available = allAdditionals.filter((a) => {
-    const cats = (a as any).categories ?? a.associatedProductCategories;
-    if (!cats || cats.length === 0) return true;
-    return catId ? cats.includes(catId) : true;
+    const cats = a.categories ?? [];
+    if (cats.length === 0) return true;
+    return catId ? cats.some((c) => String(c) === String(catId)) : true;
   });
-
-  const isSelected = (id: string) => addOns.some((a: any) => a._id === id);
 
   const handleToggleAddon = (addon: Addon) => {
     const addonId = addon._id;
-    if (addOns.some((a: any) => a._id === addonId)) {
-      const newAddOns = addOns.filter((a: any) => a._id !== addonId);
+    if (addOns.some((a) => a._id === addonId)) {
+      const newAddOns = addOns.filter((a) => a._id !== addonId);
       onUpdateAddOns(item.cartItemId, newAddOns);
     } else {
-      const addonName = addon.name || (addon as any).title || '';
+      const addonName = addon.title || '';
       const newAddOns = [
         ...addOns,
         { _id: addonId, name: addonName, price: addon.price, quantity: 1 },
