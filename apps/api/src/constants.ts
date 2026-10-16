@@ -88,6 +88,42 @@ export const MERCADOPAGO_CURRENCY = 'ARS';
 // Tiempo que se reserva el stock de un pedido online sin pagar antes de liberarlo.
 export const PAYMENT_CHECKOUT_TTL_MINUTES = 15;
 
+// --- Google Maps Platform (geocodificación + distancia) ---
+// SEGURIDAD: la API key vive SOLO acá (backend) y NUNCA se envía al cliente.
+export const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
+export const GOOGLE_ROUTES_API_URL = 'https://routes.googleapis.com/directions/v5:computeRoutes';
+
+// Caché de geocodificación: una dirección ya consultada NO vuelve a gastar cuota.
+export const GEOCODE_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+export const GEOCODE_CACHE_MAX_ENTRIES = 800;
+// Tope mensual de consultas a Google (capa gratuita). Al superarlo se degrada
+// sin llamar a la API: se responde con lo cacheado o un aviso claro.
+export const GEOCODE_MONTHLY_CAP = Number(process.env.GOOGLE_GEOCODE_MONTHLY_CAP || 2500);
+// Cantidad máxima de resultados que se devuelven al frontend por búsqueda.
+export const GEOCODE_MAX_RESULTS = 5;
+
+// Distancias: caché corta + estimación local si la API de rutas no está disponible.
+export const DISTANCE_CACHE_TTL_MS = 10 * 60 * 1000;
+export const DISTANCE_CACHE_MAX_ENTRIES = 800;
+// Factor de corrección calle/distancia real sobre la distancia en línea recta.
+export const ROAD_DISTANCE_FACTOR = 1.35;
+
+// Ubicación del local (KOGO | Korean Street Food, Corrientes).
+// Se puede sobreescribir por entorno sin tocar código.
+export const STORE_LAT = Number(process.env.STORE_LAT || -27.46697159852008);
+export const STORE_LNG = Number(process.env.STORE_LNG || -58.83767523033696);
+
+// Sesgo geográfico de las búsquedas (Gran Corrientes / Resistencia).
+export const GEOCODE_BOUNDS = {
+  south: -27.7,
+  west: -59.1,
+  north: -27.3,
+  east: -58.6,
+} as const;
+
+// Tope mensual de consultas a la API de rutas (capa gratuita).
+export const ROUTES_MONTHLY_CAP = Number(process.env.GOOGLE_ROUTES_MONTHLY_CAP || 2500);
+
 export const ALLOWED_ORIGINS = (() => {
   const envOrigins = (process.env.CLIENT_URL || '')
     .split(',')

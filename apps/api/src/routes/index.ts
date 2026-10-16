@@ -12,6 +12,8 @@ import configRoutes from '../modules/config/config.routes';
 import bannersRoutes from '../modules/banners/banners.routes';
 import analyticsRoutes from '../modules/analytics/analytics.routes';
 import galleryRoutes from '../modules/gallery/gallery.routes';
+import deliveryRoutes from '../modules/delivery/delivery.routes';
+import geocodingRoutes from '../modules/geocoding/geocoding.routes';
 
 const router = Router();
 
@@ -28,6 +30,8 @@ router.use('/config', configRoutes);
 router.use('/banners', bannersRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/gallery', galleryRoutes);
+router.use('/delivery', deliveryRoutes);
+router.use('/geocoding', geocodingRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
