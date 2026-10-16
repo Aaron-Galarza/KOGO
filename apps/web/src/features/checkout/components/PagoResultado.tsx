@@ -8,11 +8,17 @@ import { paymentsService, PaymentStatus } from '@/services/payments.service';
 import { useCartStore } from '@/stores/cart.store';
 import { formatCurrency } from '@/utils/format';
 import { LAST_ONLINE_ORDER_KEY } from '@/utils/constants';
+import { paymentPresentation, PaymentTone } from '../payment-status';
+import { PaymentRecoveryActions } from './PaymentRecoveryActions';
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_ATTEMPTS = 20; // ~60 s verificando contra el backend
 
-type Resolved = 'verificando' | 'aprobado' | 'pendiente' | 'error';
+const TONE_STYLES: Record<PaymentTone, { Icon: typeof CheckCircle; iconClass: string }> = {
+  success: { Icon: CheckCircle, iconClass: 'text-green-500' },
+  warning: { Icon: Clock, iconClass: 'text-amber-500' },
+  danger: { Icon: XCircle, iconClass: 'text-red-500' },
+};
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -24,7 +30,6 @@ function errorMessage(err: unknown, fallback: string): string {
  * IMPORTANTE: la URL de retorno NO confirma el pago. Esta pantalla arranca en
  * "verificando" y solo muestra un resultado cuando el BACKEND informa un estado
  * de pago (confirmado por webhook o por conciliación autenticada contra MP).
- * El `variant` de la URL nunca se usa como verdad.
  */
 export function PagoResultado() {
   const searchParams = useSearchParams();
@@ -90,7 +95,7 @@ export function PagoResultado() {
     };
   }, [orderId]);
 
-  // Sin id de pedido no hay nada que verificar: se muestra un aviso.
+  // Sin id de pedido no hay nada que verificar.
   if (!orderId) {
     return (
       <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4 text-center">
@@ -127,94 +132,73 @@ export function PagoResultado() {
             confirmación de Mercado Pago.
           </p>
           <p className="text-sm text-red-600 mb-6">{error}</p>
-          <Link
-            href={`/pago/pendiente?orderId=${orderId}`}
-            className="block w-full bg-[#D95A2B] text-white py-3 rounded-xl font-bold hover:bg-[#D94B2B]"
-          >
-            Volver a verificar
-          </Link>
+          <PaymentRecoveryActions orderId={orderId} canRetry />
         </div>
       </div>
     );
   }
 
-  // El resultado lo decide SIEMPRE el backend. Si todavía no hay estado, queda
-  // en "verificando": la URL nunca confirma el pago.
-  const resolved: Resolved = status
-    ? status.paymentStatus === 'approved'
-      ? 'aprobado'
-      : status.paymentStatus === 'rejected' || status.paymentStatus === 'cancelled'
-        ? 'error'
-        : 'pendiente'
-    : 'verificando';
+  // Todavía sin respuesta del backend.
+  if (!status) {
+    return (
+      <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <div className="bg-white rounded-2xl shadow-md p-8 max-w-md w-full">
+          <Loader2 size={56} className="mx-auto mb-3 text-[#D95A2B] animate-spin" />
+          <h1 className="text-2xl font-extrabold text-[#212121] font-[var(--font-montserrat)] mb-2">
+            Verificando el pago…
+          </h1>
+          <p className="text-[#757575]">
+            Estamos confirmando tu pago con Mercado Pago. No cierres esta pantalla.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const config = {
-    verificando: {
-      Icon: Loader2,
-      iconClass: 'text-[#D95A2B] animate-spin',
-      title: 'Verificando el pago…',
-      message:
-        'Estamos confirmando tu pago con Mercado Pago. No cierres esta pantalla, se actualiza sola.',
-    },
-    aprobado: {
-      Icon: CheckCircle,
-      iconClass: 'text-green-500',
-      title: '¡Pago aprobado!',
-      message: 'Registramos tu pago. Te avisaremos por WhatsApp cuando el pedido esté listo.',
-    },
-    pendiente: {
-      Icon: Clock,
-      iconClass: 'text-amber-500',
-      title: 'Pago pendiente',
-      message:
-        'Mercado Pago todavía no confirmó el pago. Si ya pagaste, se acreditará en unos minutos. Te avisaremos por WhatsApp.',
-    },
-    error: {
-      Icon: XCircle,
-      iconClass: 'text-red-500',
-      title: 'El pago no se completó',
-      message: 'No pudimos acreditar el pago. Podés volver a intentarlo o abonar al recibir el pedido.',
-    },
-  }[resolved];
+  const presentation = paymentPresentation(status, { verifying: loading });
+  const { Icon, iconClass } = TONE_STYLES[presentation.tone];
+  const canRetry = status.orderStatus !== 'cancelled';
 
   return (
     <div className="cart-bg min-h-screen flex flex-col items-center justify-center p-4 text-center">
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-md w-full">
-        <config.Icon size={56} className={`mx-auto mb-3 ${config.iconClass}`} />
+        <Icon size={56} className={`mx-auto mb-3 ${iconClass}`} />
         <h1 className="text-2xl font-extrabold text-[#212121] font-[var(--font-montserrat)] mb-2">
-          {config.title}
+          {presentation.title}
         </h1>
-        <p className="text-[#757575] mb-4">{config.message}</p>
+        <p className="text-[#757575] mb-4">{presentation.message}</p>
 
-        {status && (
-          <p className="text-sm text-[#4a5568] mb-4">
-            Total: <span className="font-semibold">{formatCurrency(status.total)}</span>
-          </p>
-        )}
+        <p className="text-sm text-[#4a5568] mb-4">
+          Total: <span className="font-semibold">{formatCurrency(status.total)}</span>
+        </p>
 
-        {loading && !error && resolved !== 'verificando' && (
-          <div className="flex items-center justify-center gap-2 text-sm text-[#757575] mb-4">
-            <Loader2 size={16} className="animate-spin" />
-            Actualizando el estado…
+        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
+        {presentation.recovery ? (
+          <div className="mb-4">
+            <PaymentRecoveryActions orderId={orderId} canRetry={canRetry} />
           </div>
+        ) : (
+          loading && (
+            <div className="flex items-center justify-center gap-2 text-sm text-[#757575] mb-4">
+              <Loader2 size={16} className="animate-spin" />
+              Actualizando el estado…
+            </div>
+          )
         )}
 
-        {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-
-        <div className="space-y-2">
-          <Link
-            href={`/order-confirmation?orderId=${orderId}`}
-            className="block w-full bg-[#D95A2B] text-white py-3 rounded-xl font-bold hover:bg-[#D94B2B]"
-          >
-            Ver mi pedido
-          </Link>
-          <Link
-            href="/menu"
-            className="block w-full py-3 rounded-xl font-bold bg-gray-100 text-[#212121] hover:bg-gray-200"
-          >
-            Volver al menú
-          </Link>
-        </div>
+        <Link
+          href={`/order-confirmation?orderId=${orderId}`}
+          className="block w-full py-3 rounded-xl font-bold bg-gray-100 text-[#212121] hover:bg-gray-200"
+        >
+          Ver mi pedido
+        </Link>
+        <Link
+          href="/menu"
+          className="block w-full mt-2 py-3 rounded-xl font-bold bg-gray-100 text-[#212121] hover:bg-gray-200"
+        >
+          Volver al menú
+        </Link>
       </div>
     </div>
   );

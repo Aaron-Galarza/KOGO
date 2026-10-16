@@ -8,14 +8,14 @@ import { DeliveryForm } from '@/features/checkout/components/DeliveryForm';
 import { PaymentForm } from '@/features/checkout/components/PaymentForm';
 import { CouponInput } from '@/features/checkout/components/CouponInput';
 import { formatCurrency } from '@/utils/format';
-import { ShoppingCart } from 'lucide-react';
+import { Loader2, ShoppingCart } from 'lucide-react';
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const getDiscount = useCartStore((s) => s.getDiscount);
   const getTotal = useCartStore((s) => s.getTotal);
-  const { handleCreateOrder, loading, error } = useCheckout();
+  const { handleCreateOrder, loading, error, redirecting } = useCheckout();
 
   if (items.length === 0) {
     return (
@@ -32,6 +32,18 @@ export default function CheckoutPage() {
 
   return (
     <div className="cart-bg min-h-screen p-4 pb-32 max-w-2xl mx-auto">
+      {redirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm p-8 text-center">
+          <Loader2 size={52} className="animate-spin text-[#D95A2B] mb-5" />
+          <h2 className="text-2xl font-extrabold text-[#212121] font-[var(--font-montserrat)] mb-2">
+            ¡Listo! Te llevamos a Mercado Pago
+          </h2>
+          <p className="text-[#757575] max-w-sm">
+            Vas a completar el pago dentro de Mercado Pago, de forma segura.
+            No cierres esta pantalla.
+          </p>
+        </div>
+      )}
       <Link href="/cart" className="text-[#D95A2B] hover:text-[#D94B2B] font-semibold text-sm mb-3 inline-block">
         Volver al carrito
       </Link>

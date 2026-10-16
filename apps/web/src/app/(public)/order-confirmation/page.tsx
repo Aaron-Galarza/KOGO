@@ -7,63 +7,14 @@ import { ordersService } from '@/services/orders.service';
 import { useOrderConfirmStore } from '@/stores/order-confirm.store';
 import { Order } from '@/types';
 import { OrderTicket } from '@/components/common/OrderTicket';
-import { CheckCircle, Clock, XCircle, RotateCcw } from 'lucide-react';
-
-type Tone = 'success' | 'warning' | 'danger';
+import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { paymentPresentation, PaymentTone } from '@/features/checkout/payment-status';
+import { PaymentRecoveryActions } from '@/features/checkout/components/PaymentRecoveryActions';
 
 const POLL_INTERVAL_MS = 3000;
+const MAX_ATTEMPTS = 15; // ~45 s verificando antes de decir "no cobrado"
 
-/**
- * Presenta el pedido según el ESTADO DE PAGO real (no según la URL de retorno).
- * Efectivo/transferencia se cobran al entregar, así que se muestran como éxito.
- */
-function paymentPresentation(order: Order): { tone: Tone; title: string; message: string } {
-  const ps = order.paymentStatus ?? 'not_required';
-
-  if (order.paymentMethod === 'mercadopago') {
-    if (ps === 'approved') {
-      return {
-        tone: 'success',
-        title: '¡Pago aprobado!',
-        message: 'Gracias por tu pedido. Te avisaremos por WhatsApp cuando esté listo.',
-      };
-    }
-    if (ps === 'rejected') {
-      return {
-        tone: 'danger',
-        title: 'El pago no se completó',
-        message: 'Mercado Pago rechazó el pago. Podés reintentar la compra o abonar al recibir el pedido.',
-      };
-    }
-    if (ps === 'cancelled') {
-      return {
-        tone: 'danger',
-        title: 'El pago fue cancelado',
-        message: 'El pedido no quedó pago. Podés intentar la compra nuevamente.',
-      };
-    }
-    if (ps === 'refunded') {
-      return {
-        tone: 'warning',
-        title: 'Pago reembolsado',
-        message: 'El pago de este pedido fue devuelto.',
-      };
-    }
-    return {
-      tone: 'warning',
-      title: 'Estamos confirmando tu pago',
-      message: 'Mercado Pago todavía no acreditó el pago. Esta pantalla se actualiza sola.',
-    };
-  }
-
-  return {
-    tone: 'success',
-    title: '¡Gracias por tu pedido!',
-    message: 'Te avisaremos por WhatsApp cuando esté listo.',
-  };
-}
-
-const TONE_STYLES: Record<Tone, { Icon: typeof CheckCircle; iconClass: string; titleClass: string }> = {
+const TONE_STYLES: Record<PaymentTone, { Icon: typeof CheckCircle; iconClass: string; titleClass: string }> = {
   success: { Icon: CheckCircle, iconClass: 'text-green-500', titleClass: 'text-green-600' },
   warning: { Icon: Clock, iconClass: 'text-amber-500', titleClass: 'text-amber-600' },
   danger: { Icon: XCircle, iconClass: 'text-red-500', titleClass: 'text-red-600' },
@@ -83,8 +34,10 @@ function ConfirmationContent() {
 
   const [order, setOrder] = useState<Order | null>(storedOrder);
   const [loading, setLoading] = useState(true);
+  const [verifying, setVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasOrderRef = useRef(Boolean(storedOrder));
+  const attemptsRef = useRef(0);
 
   useEffect(() => {
     if (!orderId) return;
@@ -102,13 +55,19 @@ function ConfirmationContent() {
         setOrder(fresh);
         setError(null);
 
-        // Si el pago online sigue sin resolverse, se sigue verificando solo.
+        // Si el pago online sigue sin resolverse, se sigue verificando un rato.
         const stillPending =
           fresh.paymentMethod === 'mercadopago' &&
           (fresh.paymentStatus === 'pending' || fresh.paymentStatus === 'in_process');
-        if (stillPending) timer = setTimeout(load, POLL_INTERVAL_MS);
+        if (stillPending && attemptsRef.current < MAX_ATTEMPTS) {
+          attemptsRef.current += 1;
+          timer = setTimeout(load, POLL_INTERVAL_MS);
+        } else {
+          setVerifying(false);
+        }
       } catch {
         if (active && !hasOrderRef.current) setError('No pudimos cargar tu pedido');
+        if (active) setVerifying(false);
       } finally {
         if (active) setLoading(false);
       }
@@ -144,9 +103,9 @@ function ConfirmationContent() {
     );
   }
 
-  const info = paymentPresentation(order);
+  const info = paymentPresentation(order, { verifying });
   const { Icon, iconClass, titleClass } = TONE_STYLES[info.tone];
-  const needsRetry = info.tone === 'danger';
+  const canRetry = order.status !== 'cancelled';
 
   return (
     <div className="cart-bg min-h-screen p-4 py-8">
@@ -159,12 +118,8 @@ function ConfirmationContent() {
       <OrderTicket order={order} />
 
       <div className="max-w-md mx-auto mt-6 space-y-2">
-        {needsRetry && (
-          <Link href="/menu" className="w-full flex items-center justify-center gap-2 bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B]">
-            <RotateCcw size={18} /> Intentar de nuevo
-          </Link>
-        )}
-        <Link href="/" className="w-full block text-center bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B]">
+        {info.recovery && <PaymentRecoveryActions orderId={orderId} canRetry={canRetry} />}
+        <Link href="/" className="w-full block text-center py-3 rounded-full font-bold bg-gray-100 text-[#212121] hover:bg-gray-200">
           Volver al menu
         </Link>
       </div>
