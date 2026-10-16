@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Package } from 'lucide-react';
+import { Order } from '@/types';
 import { usePedidos } from '@/features/admin/pedidos/hooks/usePedidos';
 import { OrderCard } from '@/features/admin/pedidos/components/OrderCard';
 import { OrderNotification } from '@/features/admin/components/OrderNotification';
@@ -15,8 +17,23 @@ const RANGE_LABELS: Record<string, string> = {
   today: 'Hoy', yesterday: 'Ayer', week: 'Semana', month: 'Mes', custom: 'Personalizado', all: 'Todas',
 };
 
+// Filtro por estado de COBRO (independiente del estado del pedido).
+const PAY_FILTERS = [
+  { key: 'all', label: 'Todos' },
+  { key: 'paid', label: 'Cobrados' },
+  { key: 'unpaid', label: 'Sin cobrar' },
+] as const;
+
+type PayFilter = (typeof PAY_FILTERS)[number]['key'];
+
 export default function PedidosPage() {
   const { orders, loading, status, setStatus, range, setRange, customFrom, setCustomFrom, customTo, setCustomTo, updatingId, updateStatus } = usePedidos();
+  const [payFilter, setPayFilter] = useState<PayFilter>('all');
+
+  const isPaid = (o: Order) => o.paymentStatus === 'approved';
+  const visibleOrders = orders.filter((o) =>
+    payFilter === 'all' ? true : payFilter === 'paid' ? isPaid(o) : !isPaid(o)
+  );
 
   return (
     <div className="cart-bg min-h-screen p-4">
@@ -47,6 +64,19 @@ export default function PedidosPage() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs font-semibold text-[#757575]">Pago:</span>
+        <div className="flex gap-1">
+          {PAY_FILTERS.map((f) => (
+            <button key={f.key} onClick={() => setPayFilter(f.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
+                payFilter === f.key ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-300 text-[#757575] hover:bg-gray-50'}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {range === 'custom' && (
         <div className="flex flex-wrap gap-2 mb-4 items-center">
           <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
@@ -59,11 +89,11 @@ export default function PedidosPage() {
 
       {loading ? (
         <p className="text-[#757575]">Cargando...</p>
-      ) : orders.length === 0 ? (
-        <p className="text-[#757575]">No hay pedidos</p>
+      ) : visibleOrders.length === 0 ? (
+        <p className="text-[#757575]">{orders.length === 0 ? 'No hay pedidos' : 'No hay pedidos con ese filtro de pago'}</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {orders.map((o) => <OrderCard key={o._id} order={o} onStatusChange={updateStatus} isUpdating={updatingId === o._id} />)}
+          {visibleOrders.map((o) => <OrderCard key={o._id} order={o} onStatusChange={updateStatus} isUpdating={updatingId === o._id} />)}
         </div>
       )}
     </div>

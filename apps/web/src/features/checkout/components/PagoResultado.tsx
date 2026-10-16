@@ -72,11 +72,8 @@ export function PagoResultado() {
           attemptsRef.current += 1;
           timer = setTimeout(poll, POLL_INTERVAL_MS);
         } else {
-          try {
-            window.localStorage.removeItem(LAST_ONLINE_ORDER_KEY);
-          } catch {
-            // localStorage puede no estar disponible; no es crítico.
-          }
+          // Se conserva el id del pedido en localStorage: así, al refrescar la
+          // pantalla, se vuelve a verificar el estado real contra el backend.
           setLoading(false);
         }
       } catch (err) {

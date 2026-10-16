@@ -38,6 +38,40 @@ const STATUS_LABELS: Record<string, string> = {
 
 const ALL_STATUSES = ['pending', 'preparing', 'ready', 'delivered', 'cancelled'] as const;
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: 'Efectivo',
+  transfer: 'Transferencia',
+  mercadopago: 'Mercado Pago',
+};
+
+// Estado de pago (SEPARADO del estado del pedido). Es lo que permite ver de un
+// vistazo si un pedido online ya está cobrado.
+function paymentBadge(order: Order): { label: string; className: string } {
+  const ps = order.paymentStatus ?? 'not_required';
+
+  if (order.paymentMethod === 'mercadopago') {
+    switch (ps) {
+      case 'approved':
+        return { label: 'Pagado', className: 'bg-green-100 text-green-700 border-green-300' };
+      case 'pending':
+      case 'in_process':
+        return { label: 'Pago pendiente', className: 'bg-amber-100 text-amber-700 border-amber-300' };
+      case 'rejected':
+        return { label: 'Pago rechazado', className: 'bg-red-100 text-red-700 border-red-300' };
+      case 'cancelled':
+        return { label: 'Pago cancelado', className: 'bg-red-100 text-red-700 border-red-300' };
+      case 'refunded':
+        return { label: 'Reembolsado', className: 'bg-blue-100 text-blue-700 border-blue-300' };
+      default:
+        return { label: 'Sin cobrar', className: 'bg-gray-100 text-gray-600 border-gray-300' };
+    }
+  }
+
+  return order.paymentMethod === 'cash'
+    ? { label: 'A cobrar', className: 'bg-gray-100 text-gray-600 border-gray-300' }
+    : { label: 'Confirmar transferencia', className: 'bg-gray-100 text-gray-600 border-gray-300' };
+}
+
 interface OrderCardProps {
   order: Order;
   onStatusChange: (id: string, status: string) => void;
@@ -153,7 +187,12 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
               {order.delivery.address}
             </p>
           )}
-          <p><span className="font-semibold text-[#212121]">Pago:</span> {order.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}</p>
+          <p className="flex flex-wrap items-center gap-2">
+            <span><span className="font-semibold text-[#212121]">Pago:</span> {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${paymentBadge(order).className}`}>
+              {paymentBadge(order).label}
+            </span>
+          </p>
         </div>
 
         {/* Status */}
