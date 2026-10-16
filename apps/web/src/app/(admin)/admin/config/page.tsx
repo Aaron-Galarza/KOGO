@@ -6,6 +6,7 @@ import { ScheduleConfig } from '@/features/admin/config/components/ScheduleConfi
 import { BannersManager } from '@/features/admin/config/components/BannersManager';
 import { CouponForm } from '@/features/admin/config/components/CouponForm';
 import { CouponsList } from '@/features/admin/config/components/CouponsList';
+import { DeliverySettings } from '@/features/admin/config/components/DeliverySettings';
 import { Coupon } from '@/types';
 
 export default function ConfigPage() {
@@ -19,6 +20,7 @@ export default function ConfigPage() {
         </h1>
         <p className="text-xs sm:text-sm text-[#757575] mb-4 sm:mb-6">Horarios, banners y cupones de la tienda.</p>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <DeliverySettings />
           <ScheduleConfig />
           <BannersManager />
           <CouponForm onCouponAdded={(c) => setCoupons([c, ...coupons])} />

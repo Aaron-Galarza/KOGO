@@ -65,7 +65,15 @@ export function usePedidos() {
     try {
       await updateOrderStatus(id, newStatus);
       setOrders((prev) => {
-        const updated = prev.map((o) => o._id === id ? { ...o, status: newStatus as Order['status'] } : o);
+        const updated = prev.map((o) => {
+          if (o._id !== id) return o;
+          // Misma regla que el backend: entregado ⇒ pago acreditado.
+          const paymentStatus =
+            newStatus === 'delivered' && o.paymentStatus !== 'refunded'
+              ? ('approved' as Order['paymentStatus'])
+              : o.paymentStatus;
+          return { ...o, status: newStatus as Order['status'], paymentStatus };
+        });
         if (status) return updated.filter((o) => o.status === status);
         return updated;
       });

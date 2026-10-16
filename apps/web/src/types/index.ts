@@ -162,7 +162,12 @@ export interface Order {
   total: number;
   netTotal?: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
-  delivery?: { address: string; coordinates: { lat: number; lng: number }; distanceKm: number };
+  delivery?: {
+    address?: string;
+    coordinates?: { lat: number; lng: number };
+    /** Distancia al local en km (la calcula el backend). */
+    distanceKm?: number;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -205,4 +210,53 @@ export interface DaySchedule {
   day: string;
   isStoreOpen: boolean;
   ranges: DayRange[];
+}
+
+// ── Envío / direcciones ─────────────────────────────────────────────────────
+/** Origen de la distancia: Google Routes o estimación local (respaldo). */
+export type DistanceSource = 'google' | 'estimado';
+
+export interface DeliveryQuoteDetails {
+  baseCost: number;
+  rainSurcharge: number;
+  isRaining: boolean;
+  matchedMaxKm: number | null;
+  outOfRange: boolean;
+  deliverable: boolean;
+  maxDeliveryKm: number;
+  distanceSource: DistanceSource;
+  configMissing: boolean;
+}
+
+export interface DeliveryQuote {
+  distanceKm: number;
+  deliveryCost: number;
+  details: DeliveryQuoteDetails;
+}
+
+export interface DeliveryKmRange {
+  id: string;
+  maxKm: number;
+  price: number;
+}
+
+export interface DeliveryConfig {
+  kmRanges: DeliveryKmRange[];
+  maxDeliveryKm: number;
+  extraRain: number;
+  isRaining: boolean;
+}
+
+/** Resultado de la búsqueda de direcciones (lo resuelve el backend con Google). */
+export interface GeocodePlace {
+  placeId: string;
+  formattedAddress: string;
+  lat: number;
+  lng: number;
+  locationType: string;
+}
+
+export interface Coordinates {
+  lat: number;
+  lng: number;
 }

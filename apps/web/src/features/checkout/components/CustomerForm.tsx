@@ -20,9 +20,13 @@ interface CustomerFormProps {
   onSubmit: (data: CustomerFormData) => void;
   loading: boolean;
   error?: string | null;
+  /** Contenido extra antes del botón (ej: confirmación de dirección). */
+  footerNote?: React.ReactNode;
+  /** Bloquea el envío hasta resolver algo pendiente (ej: confirmar dirección). */
+  submitDisabled?: boolean;
 }
 
-export function CustomerForm({ onSubmit, loading, error }: CustomerFormProps) {
+export function CustomerForm({ onSubmit, loading, error, footerNote, submitDisabled = false }: CustomerFormProps) {
   const [form, setForm] = useState<CustomerFormData>({ name: '', phone: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,6 +39,7 @@ export function CustomerForm({ onSubmit, loading, error }: CustomerFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitDisabled) return;
     const errs: Record<string, string> = {};
     const name = sanitize(form.name);
     const phone = sanitizePhone(form.phone);
@@ -78,9 +83,10 @@ export function CustomerForm({ onSubmit, loading, error }: CustomerFormProps) {
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
-      <button type="submit" disabled={loading}
-        className="w-full mt-4 bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 active:scale-95 transition">
-        {loading ? 'Procesando...' : 'Confirmar pedido'}
+      {footerNote && <div className="mt-4">{footerNote}</div>}
+      <button type="submit" disabled={loading || submitDisabled}
+        className="w-full mt-4 bg-[#D95A2B] text-white py-3 rounded-full font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-95 transition">
+        {loading ? 'Procesando...' : submitDisabled ? 'Confirmá tu dirección para continuar' : 'Confirmar pedido'}
       </button>
     </form>
   );

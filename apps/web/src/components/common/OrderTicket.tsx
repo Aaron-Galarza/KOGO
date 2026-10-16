@@ -93,6 +93,12 @@ export function OrderTicket({ order }: OrderTicketProps) {
 
       <div className="space-y-1 text-sm text-center mb-4 pb-4 border-b border-gray-300 text-[#4a5568]">
         <p><strong>Entrega:</strong> {order.deliveryType === 'pickup' ? 'RETIRO' : 'DOMICILIO'}</p>
+        {order.deliveryType === 'delivery' && order.delivery?.address && (
+          <p><strong>Dirección:</strong> {order.delivery.address}</p>
+        )}
+        {order.deliveryType === 'delivery' && order.delivery?.distanceKm ? (
+          <p><strong>Distancia:</strong> {order.delivery.distanceKm} km</p>
+        ) : null}
         <p><strong>Pago:</strong> {paymentMethod}{paymentStatus ? ` (${paymentStatus})` : ''}</p>
       </div>
     </div>

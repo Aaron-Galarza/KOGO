@@ -101,6 +101,8 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
 
   const handlePrint = () => {
     if (order.deliveryType === 'delivery') {
+      // Se precarga el envío ya calculado: solo se cambia si hace falta.
+      setShippingCost(order.deliveryCost ? String(order.deliveryCost) : '');
       setShowShipping(true);
     } else {
       printComanda(order);
@@ -108,13 +110,12 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
   };
 
   const handleShippingSubmit = async () => {
-    const cost = parseFloat(shippingCost);
-    if (cost > 0) {
+    const parsed = parseFloat(shippingCost);
+    const cost = Number.isFinite(parsed) && parsed >= 0 ? parsed : (order.deliveryCost ?? 0);
+    if (cost !== (order.deliveryCost ?? 0)) {
       try { await updateOrderDeliveryCost(order._id!, cost); } catch {}
-      printComanda(order, cost);
-    } else {
-      printComanda(order);
     }
+    printComanda(order, cost);
     setShowShipping(false);
     setShippingCost('');
   };
@@ -187,6 +188,13 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
               {order.delivery.address}
             </p>
           )}
+          {order.deliveryType === 'delivery' && (
+            <p className="text-xs text-[#757575]">
+              Envío: <span className="font-semibold text-[#212121]">{formatCurrency(order.deliveryCost ?? 0)}</span>
+              {order.delivery?.distanceKm ? ` · ${order.delivery.distanceKm} km` : ''}
+              {!order.deliveryCost ? ' · a coordinar' : ''}
+            </p>
+          )}
           <p className="flex flex-wrap items-center gap-2">
             <span><span className="font-semibold text-[#212121]">Pago:</span> {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>
             <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${paymentBadge(order).className}`}>
@@ -239,7 +247,7 @@ export const OrderCard = memo(function OrderCard({ order, onStatusChange, isUpda
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl">
               <p className="text-lg font-bold mb-2 text-[#212121]">Costo de envio</p>
-              <p className="text-sm text-[#757575] mb-4">Ingresa el costo de envio para {order.customer.name}</p>
+              <p className="text-sm text-[#757575] mb-4">Costo de envio para {order.customer.name}. Ya viene calculado por distancia; cambialo solo si hace falta.</p>
               <input type="number" value={shippingCost} onChange={(e) => setShippingCost(e.target.value)}
                 placeholder="0" min={0} step="0.01" autoFocus
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#D95A2B] mb-4" />
