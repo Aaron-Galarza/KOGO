@@ -246,6 +246,10 @@ export interface DeliveryConfig {
   maxDeliveryKm: number;
   extraRain: number;
   isRaining: boolean;
+  /** Punto de partida de los repartos (solo lo devuelve la API del admin). */
+  originLat?: number;
+  originLng?: number;
+  originLabel?: string;
 }
 
 /** Resultado de la búsqueda de direcciones (lo resuelve el backend con Google). */

@@ -12,6 +12,8 @@ interface AddressAutocompleteProps {
   onChange: (address: string) => void;
   onSelect: (address: string, coordinates: Coordinates | null) => void;
   disabled?: boolean;
+  /** false oculta la opción de "usar sin ubicación exacta" (ej: en el admin). */
+  allowWithoutCoordinates?: boolean;
 }
 
 export function AddressAutocomplete({
@@ -20,6 +22,7 @@ export function AddressAutocomplete({
   onChange,
   onSelect,
   disabled = false,
+  allowWithoutCoordinates = true,
 }: AddressAutocompleteProps) {
   const [input, setInput] = useState(value);
   const [open, setOpen] = useState(false);
@@ -148,13 +151,15 @@ export function AddressAutocomplete({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => choose(input.trim(), null)}
-            className="flex w-full items-center gap-2 border-t border-gray-100 bg-gray-50 px-3 py-2 text-left text-xs text-[#757575] transition hover:bg-gray-100"
-          >
-            <Bike size={14} /> Usar esta dirección sin ubicación exacta (coordinamos el envío por WhatsApp)
-          </button>
+          {allowWithoutCoordinates && (
+            <button
+              type="button"
+              onClick={() => choose(input.trim(), null)}
+              className="flex w-full items-center gap-2 border-t border-gray-100 bg-gray-50 px-3 py-2 text-left text-xs text-[#757575] transition hover:bg-gray-100"
+            >
+              <Bike size={14} /> Usar esta dirección sin ubicación exacta (coordinamos el envío por WhatsApp)
+            </button>
+          )}
         </div>
       )}
     </div>

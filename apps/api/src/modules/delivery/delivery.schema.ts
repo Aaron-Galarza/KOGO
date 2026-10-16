@@ -10,6 +10,9 @@ export const UpdateDeliveryConfigSchema = z
     maxDeliveryKm: z.number().min(0.5, 'El radio mínimo es 0.5 km').max(100).optional(),
     extraRain: z.number().min(0, 'El recargo no puede ser negativo').max(1_000_000).optional(),
     isRaining: z.boolean().optional(),
+    originLat: z.number().min(-90, 'Latitud inválida').max(90, 'Latitud inválida').optional(),
+    originLng: z.number().min(-180, 'Longitud inválida').max(180, 'Longitud inválida').optional(),
+    originLabel: z.string().trim().max(160, 'La dirección es demasiado larga').optional(),
   })
   .refine((data) => Object.keys(data).length > 0, { message: 'No hay cambios para aplicar' });
 

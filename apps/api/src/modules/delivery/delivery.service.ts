@@ -49,10 +49,12 @@ export const DeliveryService = {
 
   /** Presupuesto de envío para unas coordenadas. */
   calculate: async (lat: number, lng: number): Promise<DeliveryQuote> => {
-    const [config, distance] = await Promise.all([
-      DeliveryService.getConfig(),
-      DistanceService.resolve(lat, lng),
-    ]);
+    const config = await DeliveryService.getConfig();
+    // La distancia se mide SIEMPRE desde el punto de partida configurado.
+    const distance = await DistanceService.resolve(lat, lng, {
+      lat: Number(config.originLat),
+      lng: Number(config.originLng),
+    });
 
     const ranges = plainRanges(config);
     const pricing = computeDeliveryPricing({
@@ -99,6 +101,9 @@ export const DeliveryService = {
     if (payload.maxDeliveryKm !== undefined) config.maxDeliveryKm = payload.maxDeliveryKm;
     if (payload.extraRain !== undefined) config.extraRain = payload.extraRain;
     if (payload.isRaining !== undefined) config.isRaining = payload.isRaining;
+    if (payload.originLat !== undefined) config.originLat = payload.originLat;
+    if (payload.originLng !== undefined) config.originLng = payload.originLng;
+    if (payload.originLabel !== undefined) config.originLabel = payload.originLabel;
     return await config.save();
   },
 
@@ -137,6 +142,20 @@ export const DeliveryService = {
       maxDeliveryKm: config.maxDeliveryKm,
       extraRain: config.extraRain,
       isRaining: config.isRaining,
+    };
+  },
+
+  /** Configuración completa para el admin (incluye el punto de partida). */
+  fullConfig: async () => {
+    const config = await DeliveryService.getConfig();
+    return {
+      kmRanges: plainRanges(config),
+      maxDeliveryKm: config.maxDeliveryKm,
+      extraRain: config.extraRain,
+      isRaining: config.isRaining,
+      originLat: Number(config.originLat),
+      originLng: Number(config.originLng),
+      originLabel: config.originLabel || '',
     };
   },
 };
