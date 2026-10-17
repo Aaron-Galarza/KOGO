@@ -97,6 +97,7 @@ export function MenuClient({ initialProducts, initialCategories }: MenuClientPro
 
       {configProduct && (
         <ProductConfigurator
+          key={configProduct._id}
           product={configProduct}
           onConfirm={(prod, ingredientes) => {
             addToCart(prod, [], ingredientes);

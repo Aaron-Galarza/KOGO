@@ -43,6 +43,7 @@ export default function POSPage() {
       {showCheckout && <POSCheckout onClose={() => setShowCheckout(false)} onSuccess={() => setShowCheckout(false)} />}
       {configProduct && (
         <ProductConfigurator
+          key={configProduct._id}
           product={configProduct}
           onConfirm={(prod, ingredientes) => addItem(prod, 1, [], ingredientes)}
           onClose={() => setConfigProduct(null)}
