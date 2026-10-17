@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Minus, Check } from 'lucide-react';
-import { Product, GrupoConfigurable, OpcionElegida } from '@/types';
+import { Product, ConfiguracionProducto, GrupoConfigurable, OpcionElegida } from '@/types';
 import { menuService } from '@/services/menu.service';
 import { formatCurrency } from '@/utils/format';
 
@@ -11,9 +11,33 @@ interface ProductConfiguratorProps {
   onConfirm: (product: Product, ingredientes: OpcionElegida[]) => void;
   onClose: () => void;
   offsetForHeader?: boolean;
+  /** Opciones ya elegidas (al editar un ítem que ya está en el carrito). */
+  initialIngredientes?: OpcionElegida[];
 }
 
 type Selection = Record<string, Record<string, number>>;
+
+/**
+ * Solo se confía en la configuración guardada en el producto si realmente trae
+ * opciones. Un carrito persistido puede tener una copia vieja o vacía: en ese
+ * caso conviene volver a pedir el detalle para no mostrar grupos sin opciones.
+ */
+function hasUsableGroups(config?: ConfiguracionProducto | null): boolean {
+  return !!config && Array.isArray(config.grupos) && config.grupos.some((g) => (g.ingredientes?.length ?? 0) > 0);
+}
+
+/** Convierte los ingredientes ya elegidos en el mapa de selección del modal. */
+function buildSelection(ingredientes?: OpcionElegida[]): Selection {
+  const selection: Selection = {};
+  for (const ing of ingredientes ?? []) {
+    if (!ing?.grupoId || !ing?.ingredienteId) continue;
+    selection[ing.grupoId] = {
+      ...(selection[ing.grupoId] ?? {}),
+      [ing.ingredienteId]: ing.cantidad > 0 ? ing.cantidad : 1,
+    };
+  }
+  return selection;
+}
 
 interface Validated {
   valid: boolean;
@@ -69,30 +93,43 @@ function validate(groups: GrupoConfigurable[], selection: Selection): Validated 
   return { valid: true, message: null, ingredientes, precioIngredientes };
 }
 
-export function ProductConfigurator({ product, onConfirm, onClose, offsetForHeader = true }: ProductConfiguratorProps) {
-  const [configuracion, setConfiguracion] = useState(product.configuracion ?? null);
-  const [loading, setLoading] = useState(!product.configuracion);
+export function ProductConfigurator({ product, onConfirm, onClose, offsetForHeader = true, initialIngredientes }: ProductConfiguratorProps) {
+  // Si el producto ya trae una configuración usable se muestra al instante; si
+  // no (o viene vacía), se pide el detalle a la API.
+  const productHasConfig = hasUsableGroups(product.configuracion);
+  const [configuracion, setConfiguracion] = useState<ConfiguracionProducto | null>(
+    productHasConfig ? product.configuracion! : null
+  );
+  const [loading, setLoading] = useState(!productHasConfig);
   const [error, setError] = useState<string | null>(null);
-  const [selection, setSelection] = useState<Selection>({});
+  const [selection, setSelection] = useState<Selection>(() => buildSelection(initialIngredientes));
 
   useEffect(() => {
-    if (configuracion) return;
+    // Si ya hay configuración usable no hace falta pedir nada; el ítem se monta
+    // con `key` por producto, así que no hay que resetear estado (loading ya
+    // arranca en true cuando esta rama se ejecuta).
+    if (productHasConfig) return;
     let alive = true;
-    setLoading(true);
     menuService
-      .getProductDetail(product._id)
+      .getProductDetail(String(product._id))
       .then((detail) => {
         if (!alive) return;
-        setConfiguracion(detail.configuracion ?? { productoId: product._id, tipoProducto: 'simple', grupos: [] });
+        setConfiguracion(detail?.configuracion ?? { productoId: String(product._id), tipoProducto: 'simple', grupos: [] });
       })
-      .catch(() => alive && setError('No pudimos cargar las opciones del producto.'))
-      .finally(() => alive && setLoading(false));
+      .catch(() => {
+        if (alive) setError('No pudimos cargar las opciones del producto.');
+      })
+      .finally(() => {
+        // El spinner se apaga siempre: si el pedido falla o la configuración
+        // viene vacía, el modal no queda bloqueado en "Cargando opciones…".
+        setLoading(false);
+      });
     return () => {
       alive = false;
     };
-  }, [product._id, configuracion]);
+  }, [product._id, productHasConfig]);
 
-  const groups = configuracion?.grupos ?? [];
+  const groups = useMemo(() => configuracion?.grupos ?? [], [configuracion]);
   const validation = useMemo(() => validate(groups, selection), [groups, selection]);
 
   const isSelected = (grupoId: string, ingredienteId: string) => (selection[grupoId]?.[ingredienteId] ?? 0) > 0;
