@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { DeliveryController } from './delivery.controller';
 import { protect, isAdmin } from '../../middlewares/auth.middleware';
 import { validateRequest } from '../../middlewares/validate.middleware';
-import { cachePublic } from '../../middlewares/cache.middleware';
+import { noStore } from '../../middlewares/cache.middleware';
 import { deliveryLimiter } from '../../middlewares/rateLimit.middleware';
 import {
   AddKmRangeSchema,
@@ -16,8 +16,9 @@ const router = Router();
 // Público: vista previa del costo de envío (la usan el checkout y el POS).
 router.post('/calculate', deliveryLimiter, validateRequest(CalculateDeliverySchema), DeliveryController.calculate);
 
-// Público: datos mínimos de la tabla de envío (rangos y lluvia).
-router.get('/config/public', cachePublic(60), DeliveryController.publicConfig);
+// Público: datos mínimos de la tabla de envío (rangos y lluvia). Sin caché: si
+// el negocio cambia precios o el recargo por lluvia, debe aplicar al instante.
+router.get('/config/public', noStore, DeliveryController.publicConfig);
 
 // Admin: configuración completa y edición.
 router.get('/config', protect, isAdmin, DeliveryController.getConfig);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
 import type { StoreConfig, DaySchedule, DayRange } from '@/types';
+import { menuService } from '@/services/menu.service';
 
 function formatHour(time?: string): string | null {
   if (!time) return null;
@@ -32,10 +33,31 @@ function isWithinRange(currentMinutes: number, range: DayRange): boolean {
   return currentMinutes >= openMin && currentMinutes <= closeMin;
 }
 
-export function StoreStatus({ config }: { config: StoreConfig | null }) {
+export function StoreStatus({ config: initialConfig }: { config: StoreConfig | null }) {
   const [mounted, setMounted] = useState(false);
+  const [config, setConfig] = useState<StoreConfig | null>(initialConfig);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // Refresco en vivo del estado: depende de la hora y de los cambios del admin
+    // (abrir/cerrar, cierre de emergencia, horarios). Sin esto quedaba congelado
+    // con lo que trajo el SSR hasta recargar la página.
+    let alive = true;
+    const refresh = () => {
+      menuService
+        .getStoreStatus()
+        .then((c) => {
+          if (alive) setConfig(c);
+        })
+        .catch(() => {});
+    };
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   if (!config || !mounted) return null;
 

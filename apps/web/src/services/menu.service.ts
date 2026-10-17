@@ -1,9 +1,13 @@
 import apiClient from './api';
 import { Product, Category, Addon, StoreConfig, Banner } from '@/types';
 
-const cache = new Map<string, { data: any; ts: number }>();
-const TTL_SHORT = 30_000;
-const TTL_LONG = 120_000;
+const cache = new Map<string, { data: unknown; ts: number }>();
+
+// Cachés cortas a propósito: el admin cambia cosas operativas (precios,
+// disponibilidad, adicionales, franjas) y no queremos mostrar datos viejos
+// durante minutos. El estado de la tienda no se cachea nunca (ver abajo).
+const TTL_CATALOG = 10_000;
+const TTL_ADDONS = 20_000;
 
 function cached<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
   const entry = cache.get(key);
@@ -18,32 +22,32 @@ function cached<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
 
 export const menuService = {
   getProducts: (): Promise<Product[]> =>
-    cached('products', TTL_SHORT, () =>
+    cached('products', TTL_CATALOG, () =>
       apiClient.get('/products').then((r) => r.data.data || [])
     ),
 
   getProductDetail: (id: string): Promise<Product> =>
-    cached(`product-${id}`, TTL_SHORT, () =>
+    cached(`product-${id}`, TTL_CATALOG, () =>
       apiClient.get(`/products/${id}`).then((r) => r.data.data)
     ),
 
   getCategories: (): Promise<Category[]> =>
-    cached('categories', TTL_SHORT, () =>
+    cached('categories', TTL_CATALOG, () =>
       apiClient.get('/categories').then((r) => r.data.data || [])
     ),
 
   getAdditionals: (): Promise<Addon[]> =>
-    cached('additionals', TTL_LONG, () =>
+    cached('additionals', TTL_ADDONS, () =>
       apiClient.get('/additionals').then((r) => r.data.data || [])
     ),
 
+  // Sin caché: si el admin abre/cierra la tienda o cambia horarios, tiene que
+  // verse al instante (el cartel de abierto/cerrado y el bloqueo de pedidos).
   getStoreStatus: (): Promise<StoreConfig> =>
-    cached('store-status', TTL_LONG, () =>
-      apiClient.get('/config/status').then((r) => r.data.data)
-    ),
+    apiClient.get('/config/status').then((r) => r.data.data),
 
   getBanners: (): Promise<Banner[]> =>
-    cached('banners', TTL_SHORT, () =>
+    cached('banners', TTL_CATALOG, () =>
       apiClient.get('/banners').then((r) => r.data.data || []).catch(() => [] as Banner[])
     ),
 };

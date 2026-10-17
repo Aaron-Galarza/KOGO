@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, Save, Plus, X } from 'lucide-react';
 import { fetchConfigStatus, saveSchedule } from '@/services/admin.service';
+import type { StoreConfig, DaySchedule } from '@/types';
 import { useToast } from '@/hooks/useToast';
 import { Hint } from '@/features/admin/components/Hint';
 
@@ -24,26 +25,31 @@ const DEFAULT_RANGES: DayRange[] = [
   { open: '18:30', close: '23:00' },
 ];
 
+/** Convierte lo que devuelve la API en el estado del formulario. */
+function toState(config: StoreConfig | null | undefined): Record<string, DayState> {
+  const m: Record<string, DayState> = {};
+  (config?.dailySchedule ?? []).forEach((d: DaySchedule) => {
+    const i = DAYS.indexOf(d.day);
+    if (i === -1) return;
+    m[DAY_KEYS[i]] = {
+      isClosed: !d.isStoreOpen,
+      ranges: Array.isArray(d.ranges) ? d.ranges.map((r) => ({ open: r.open, close: r.close })) : [],
+    };
+  });
+  return m;
+}
+
 export function ScheduleConfig() {
   const [schedule, setSchedule] = useState<Record<string, DayState>>({});
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const { error, msg, showError, showMsg } = useToast();
 
   useEffect(() => {
     fetchConfigStatus()
       .then((c) => {
-        if (c.dailySchedule) {
-          const m: Record<string, DayState> = {};
-          c.dailySchedule.forEach((d: any) => {
-            const i = DAYS.indexOf(d.day);
-            if (i === -1) return;
-            m[DAY_KEYS[i]] = {
-              isClosed: !d.isStoreOpen,
-              ranges: Array.isArray(d.ranges) ? d.ranges.map((r: any) => ({ open: r.open, close: r.close })) : [],
-            };
-          });
-          setSchedule(m);
-        }
+        setSchedule(toState(c));
+        setLoaded(true);
       })
       .catch(() => showError('Error al cargar horarios'));
   }, []);
@@ -79,14 +85,17 @@ export function ScheduleConfig() {
       setLoading(true);
       const ds = DAYS.map((day, i) => {
         const d = schedule[DAY_KEYS[i]];
-        const isStoreOpen = !d?.isClosed;
+        const isStoreOpen = d ? !d.isClosed : false;
         return {
           day,
           isStoreOpen,
           ranges: isStoreOpen && d?.ranges?.length ? d.ranges : [],
         };
       });
-      await saveSchedule(ds);
+      // La API devuelve el estado guardado: el formulario queda sincronizado al
+      // instante con lo que quedó persistido (no depende de una relectura cacheada).
+      const updated = await saveSchedule(ds);
+      if (updated?.dailySchedule) setSchedule(toState(updated));
       showMsg('Horarios actualizados');
     } catch {
       showError('Error al guardar');
@@ -147,8 +156,8 @@ export function ScheduleConfig() {
           );
         })}
       </div>
-      <button onClick={save} disabled={loading} className="w-full mt-4 bg-[#D95A2B] text-white py-2 rounded-lg font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 transition flex items-center justify-center gap-2">
-        <Save size={16} /> {loading ? 'Guardando...' : 'Guardar horarios'}
+      <button onClick={save} disabled={loading || !loaded} className="w-full mt-4 bg-[#D95A2B] text-white py-2 rounded-lg font-bold hover:bg-[#D94B2B] disabled:bg-gray-400 transition flex items-center justify-center gap-2">
+        <Save size={16} /> {!loaded ? 'Cargando horarios…' : loading ? 'Guardando...' : 'Guardar horarios'}
       </button>
     </div>
   );

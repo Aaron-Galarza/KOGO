@@ -27,7 +27,10 @@ export const makeCrudRoutes = (options: MakeCrudRoutesOptions) => {
   const router = Router();
 
   if (withPublicList) {
-    router.get('/', cachePublic(), controller.getPublic);
+    // Listados públicos (productos, categorías, adicionales, banners). Caché
+    // muy corta: un cambio de precio/disponibilidad en el admin tiene que verse
+    // casi al instante, sin esperar minutos.
+    router.get('/', cachePublic(10), controller.getPublic);
   }
 
   router.get(listPath, protect, isAdmin, controller.getAll);
