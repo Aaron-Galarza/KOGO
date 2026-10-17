@@ -91,7 +91,9 @@ export default function CartPage() {
 
       {editItem && (
         <ProductConfigurator
+          key={editItem.cartItemId}
           product={editItem}
+          initialIngredientes={editItem.ingredientes}
           onConfirm={(_product, ingredientes) => updateCartItemOptions(editItem.cartItemId, ingredientes)}
           onClose={() => setEditItem(null)}
         />
