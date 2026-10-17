@@ -15,8 +15,8 @@ export default function ConfigPage() {
         <p className="text-xs sm:text-sm text-[#757575] mb-4 sm:mb-6">
           Carrusel, horarios y envío a domicilio de la tienda.
         </p>
-        {/* Orden fijo: 1) carrusel, 2) horarios, 3) envío. */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Orden fijo: 1) carrusel, 2) horarios, 3) envío. Uno debajo del otro. */}
+        <div className="space-y-6">
           <BannersManager />
           <ScheduleConfig />
           <DeliverySettings />
