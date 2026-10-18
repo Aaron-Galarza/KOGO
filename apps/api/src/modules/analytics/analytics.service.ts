@@ -5,7 +5,7 @@ import { arDateKey } from '../../utils/argentinaTime';
 import { DateRange } from '../../constants';
 
 export interface GetStatsParams {
-  range?: DateRange;
+  range?: DateRange | 'all';
   from?: string;
   to?: string;
 }
@@ -43,7 +43,9 @@ const productKey = (title: string): string => Buffer.from(title, 'utf-8').toStri
 
 const itemRevenue = (item: IOrder['items'][number]): number => {
   const addonsTotal = item.additionals.reduce((sum, a) => sum + a.price * a.quantity, 0);
-  return item.price * item.quantity + addonsTotal;
+  const unitPrice = item.precioFinalUnidad ||
+    (item.price + (item.ingredientes || []).reduce((sum, ingredient) => sum + ingredient.precio * ingredient.cantidad, 0));
+  return unitPrice * item.quantity + addonsTotal;
 };
 
 export const AnalyticsService = {
@@ -166,7 +168,10 @@ export const AnalyticsService = {
     let startKey: string;
     let endKey: string;
 
-    if (params.range) {
+    if (params.range === 'all') {
+      startKey = '0000-01-01';
+      endKey = '9999-12-31';
+    } else if (params.range) {
       const { start, end } = getRangeStartDate(params.range);
       startKey = dateKey(start);
       endKey = dateKey(end);

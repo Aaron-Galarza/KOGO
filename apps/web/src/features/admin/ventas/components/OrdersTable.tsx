@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { fetchAnalyticsOrders, fetchAnalyticsStats } from '@/services/admin.service';
+import { fetchAnalyticsOrders, fetchAnalyticsStats, type AdminRange } from '@/services/admin.service';
 import { formatCurrency } from '@/utils/format';
-import { CreditCard, Calendar, Download, Package } from 'lucide-react';
+import { CreditCard, Download, Package } from 'lucide-react';
 import { Order } from '@/types';
+import { useToast } from '@/hooks/useToast';
 
 const PAGE_SIZE = 10;
-const RANGES = ['today', 'yesterday', 'week', 'month', 'custom', 'all'] as const;
-const RANGE_LABELS: Record<string, string> = { today: 'Hoy', yesterday: 'Ayer', week: 'Semana', month: 'Mes', custom: 'Personalizado', all: 'Todas' };
+interface OrdersTableProps { range: AdminRange; customFrom: string; customTo: string }
 
 type GroupedRow = {
   type: 'product' | 'addon';
@@ -19,37 +19,53 @@ type GroupedRow = {
   discount: number;
 };
 
-export function OrdersTable() {
+interface AnalyticsStats {
+  products: Array<{
+    title: string;
+    qty: number;
+    net: number;
+    discount: number;
+    addons: Array<{ title: string; qty: number; revenue: number }>;
+  }>;
+}
+
+export function OrdersTable({ range, customFrom, customTo }: OrdersTableProps) {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState('today');
   const [paymentFilter, setPaymentFilter] = useState('');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [viewGrouped, setViewGrouped] = useState(false);
   const [total, setTotal] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  const { error: exportError, showError } = useToast(6000);
 
   useEffect(() => {
-    setLoading(true); setShowAll(false);
+    let active = true;
+    queueMicrotask(() => { if (active) { setLoading(true); setShowAll(false); } });
+    if (range === 'custom' && (!customFrom || !customTo || customFrom > customTo)) {
+      queueMicrotask(() => { if (active) { setOrders([]); setTotal(0); setStats(null); setLoading(false); } });
+      return () => { active = false; };
+    }
     Promise.all([
-      fetchAnalyticsOrders(range as any, paymentFilter, customFrom || undefined, customTo || undefined),
-      fetchAnalyticsStats(range as any, customFrom || undefined, customTo || undefined),
+      fetchAnalyticsOrders(range, paymentFilter, customFrom || undefined, customTo || undefined),
+      fetchAnalyticsStats(range, customFrom || undefined, customTo || undefined),
     ])
       .then(([ordRes, statsRes]) => {
+        if (!active) return;
         setOrders(ordRes.orders);
         setTotal(ordRes.total);
         setStats(statsRes);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => { if (active) { setOrders([]); setStats(null); setTotal(0); } })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [range, paymentFilter, customFrom, customTo]);
 
   const grouped = useMemo<GroupedRow[]>(() => {
     if (!viewGrouped || !stats?.products) return [];
     return stats.products
-      .map((p: any) => [
+      .map((p) => [
         {
           type: 'product' as const,
           title: p.title,
@@ -58,7 +74,7 @@ export function OrdersTable() {
           revenue: p.net ?? 0,
           discount: p.discount ?? 0,
         },
-        ...(p.addons || []).map((a: any) => ({
+        ...(p.addons || []).map((a) => ({
           type: 'addon' as const,
           title: a.title,
           productTitle: p.title,
@@ -73,14 +89,22 @@ export function OrdersTable() {
   const anyDiscount = grouped.some((g) => g.discount > 0);
   const productRows = grouped.filter((g) => g.type === 'product');
 
-  const fmtDate = (d: any) => {
-    const dt = new Date(d);
+  const fmtDate = (d: Date | string | undefined) => {
+    const dt = new Date(d || 0);
     return dt.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + dt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
   };
 
   const handleExport = async () => {
-    const { exportVentas } = await import('@/utils/exportVentas');
-    exportVentas(orders);
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const { exportVentas } = await import('@/utils/exportVentas');
+      await exportVentas(orders);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'No se pudo generar el Excel.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const displayed = showAll ? orders : orders.slice(0, PAGE_SIZE);
@@ -97,26 +121,19 @@ export function OrdersTable() {
             <span className="text-xs font-medium text-[#757575] flex items-center gap-1"><Package size={14} /> Agrupado</span>
           </label>
           {orders.length > 0 && (
-            <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700"><Download size={14} /> Exportar</button>
+            <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"><Download size={14} /> {exporting ? 'Preparando...' : 'Exportar'}</button>
           )}
         </div>
       </div>
 
+      {exportError && <p role="alert" className="mb-3 text-sm text-red-700">{exportError}</p>}
+
       <div className="flex flex-wrap gap-2 mb-4">
-        {RANGES.map((r) => (
-          <button key={r} onClick={() => setRange(r)} className={`px-3 py-1 rounded-lg text-xs font-medium transition ${range === r ? 'bg-[#D95A2B] text-white' : 'bg-gray-100 text-[#757575] hover:bg-gray-200'}`}>{RANGE_LABELS[r]}</button>
-        ))}
         <select value={paymentFilter} disabled={viewGrouped} onChange={(e) => setPaymentFilter(e.target.value)} className="px-3 py-1 rounded-lg text-xs font-medium border border-gray-200 bg-white text-[#757575] focus:outline-none focus:border-[#D95A2B] disabled:opacity-50 disabled:cursor-not-allowed">
-          <option value="">Todos los pagos</option><option value="cash">Efectivo</option><option value="transfer">Transferencia</option>
+          <option value="">Todos los pagos</option><option value="cash">Efectivo</option><option value="transfer">Transferencia</option><option value="mercadopago">Mercado Pago</option>
         </select>
         {viewGrouped && <span className="self-center text-xs text-[#757575]">Vista agrupada (todos los pagos)</span>}
       </div>
-
-      {range === 'custom' && (
-        <div className="flex flex-wrap gap-2 mb-4 items-center">
-          <Calendar size={14} className="text-[#757575]" /><input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="px-2 py-1 border rounded text-xs" /><span className="text-xs text-[#757575]">a</span><input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="px-2 py-1 border rounded text-xs" />
-        </div>
-      )}
 
       {viewGrouped ? (
         grouped.length === 0 ? <p className="text-[#757575] text-sm">Sin datos</p> : (
@@ -187,14 +204,18 @@ export function OrdersTable() {
                         ))}
                       </div>
                     ))}
+                    <div className="text-xs text-[#757575] mt-1">
+                      {o.deliveryType === 'delivery' ? `Envío: ${formatCurrency(o.deliveryCost || 0)}` : 'Retiro en local'}
+                      {o.discountPercent > 0 && ` · Descuento: ${o.discountPercent}%`}
+                    </div>
                   </td>
                   <td className="py-2">
-                    <span className="text-xs font-medium text-[#757575]">{o.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}</span>
+                    <span className="text-xs font-medium text-[#757575]">{o.paymentMethod === 'cash' ? 'Efectivo' : o.paymentMethod === 'transfer' ? 'Transferencia' : 'Mercado Pago'}</span>
                     {o.discountPercent > 0 && (
                       <span className="text-[10px] text-green-600 font-medium ml-1">-{o.discountPercent}%</span>
                     )}
                   </td>
-                  <td className="py-2 text-right font-semibold text-[#212121]">{formatCurrency(o.netTotal ?? (o.total - o.deliveryCost))}</td>
+                  <td className="py-2 text-right font-semibold text-[#212121]">{formatCurrency(o.total)}</td>
                 </tr>
               ))}
             </tbody>

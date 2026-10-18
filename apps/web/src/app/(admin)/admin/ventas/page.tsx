@@ -5,9 +5,10 @@ import { DollarSign } from 'lucide-react';
 import { SalesMetrics } from '@/features/admin/ventas/components/SalesMetrics';
 import { OrdersTable } from '@/features/admin/ventas/components/OrdersTable';
 import { OwnerOnly } from '@/components/layout/OwnerOnly';
+import type { AdminRange } from '@/services/admin.service';
 
 function VentasContent() {
-  const [range, setRange] = useState('today');
+  const [range, setRange] = useState<AdminRange>('today');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
 
@@ -20,10 +21,10 @@ function VentasContent() {
 
       {/* Filtros de rango */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {['today', 'yesterday', 'week', 'month', 'custom'].map((r) => (
+        {(['today', 'yesterday', 'week', 'month', 'custom', 'all'] as const).map((r) => (
           <button key={r} onClick={() => setRange(r)}
             className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${range === r ? 'bg-[#D95A2B] text-white' : 'bg-white border border-gray-200 text-[#757575] hover:bg-gray-50'}`}>
-            {r === 'today' ? 'Hoy' : r === 'yesterday' ? 'Ayer' : r === 'week' ? 'Semana' : r === 'month' ? 'Mes' : 'Personalizado'}
+            {r === 'today' ? 'Hoy' : r === 'yesterday' ? 'Ayer' : r === 'week' ? 'Semana' : r === 'month' ? 'Mes' : r === 'all' ? 'Todas' : 'Personalizado'}
           </button>
         ))}
         {range === 'custom' && (
@@ -39,7 +40,7 @@ function VentasContent() {
 
       <div className="max-w-6xl mx-auto space-y-4">
         <SalesMetrics range={range} customFrom={customFrom} customTo={customTo} />
-        <OrdersTable />
+        <OrdersTable range={range} customFrom={customFrom} customTo={customTo} />
       </div>
     </div>
   );

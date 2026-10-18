@@ -69,7 +69,7 @@ export class OrdersController {
       ...o,
       netTotal: (o.total ?? 0) - (o.deliveryCost ?? 0),
     }));
-    const total = reportOrders.reduce((s: number, o: any) => s + (o.netTotal ?? 0), 0);
+    const total = reportOrders.reduce((s: number, o: any) => s + (o.total ?? 0), 0);
 
     sendSuccess(res, { orders: reportOrders, total, count: orders.length }, 200);
   });

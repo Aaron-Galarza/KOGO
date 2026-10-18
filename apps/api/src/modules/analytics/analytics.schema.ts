@@ -5,7 +5,7 @@ const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fec
 
 export const GetStatsQuerySchema = z
   .object({
-    range: z.enum(DATE_RANGES).optional(),
+    range: z.enum([...DATE_RANGES, 'all']).optional(),
     from: dateStringSchema.optional(),
     to: dateStringSchema.optional(),
   })
