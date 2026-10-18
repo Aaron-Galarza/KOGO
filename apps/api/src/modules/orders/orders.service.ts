@@ -59,7 +59,6 @@ export const OrdersService = {
         stockDecrements.push({ productId: product._id.toString(), quantity: item.quantity });
       }
 
-      const itemPrice = product.price * item.quantity;
       let addonsPrice = 0;
       const additionals = [];
 
