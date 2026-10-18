@@ -1,78 +1,52 @@
-import { Order } from '@/types';
+import type { Order } from '@/types';
+import { buildSalesExportRows } from './salesExportRows';
+
+const MONEY_FORMAT = '#,##0.00';
 
 export async function exportVentas(orders: Order[]) {
-  const XLSX = await import('xlsx');
-  const wb = XLSX.utils.book_new();
+  const { orderRows, productRows, otherRows } = buildSalesExportRows(orders);
+  const ExcelJS = (await import('exceljs')).default;
+  const wb = new ExcelJS.Workbook();
 
-  const orderData = orders.flatMap((o) => {
-    const d = new Date(o.createdAt!);
-    const discountLabel = o.discountPercent > 0 ? `-${o.discountPercent}%` : '-';
-    return o.items.flatMap((item) => {
-      const baseData = {
-        Fecha: d.toLocaleDateString('es-AR'),
-        Hora: d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-        Cliente: o.customer.name,
-        Producto: item.title,
-        Adicionales: (item.additionals || []).map((a) => a.name + (a.quantity > 1 ? ` x${a.quantity}` : '')).join(', ') || '-',
-        Cantidad: item.quantity,
-        Pago: o.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia',
-        Cupon: discountLabel,
-        Total: o.netTotal ?? (o.total - o.deliveryCost),
-      };
-      const rows = [baseData];
-      return rows;
-    });
-  });
+  const addSheet = (name: string, headers: string[], widths: number[], rows: Record<string, string | number>[], moneyColumns: string[]) => {
+    const sheet = wb.addWorksheet(name);
+    sheet.columns = headers.map((header, index) => ({ header, key: header, width: widths[index] }));
+    for (const row of rows) sheet.addRow(row);
+    sheet.getRow(1).font = { bold: true };
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: Math.max(sheet.rowCount, 1), column: headers.length } };
+    for (const column of moneyColumns) sheet.getColumn(column).numFmt = MONEY_FORMAT;
+    return sheet;
+  };
 
-  const ws1 = XLSX.utils.json_to_sheet(orderData);
-  ws1['!cols'] = [{ wch: 12 }, { wch: 8 }, { wch: 20 }, { wch: 25 }, { wch: 20 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Pedidos');
-
-  const pMap = new Map<string, { qty: number; revenue: number; discount: number }>();
-  const aMap = new Map<string, { productTitle: string; qty: number; revenue: number; discount: number }>();
-
-  for (const o of orders) {
-    const factor = o.discountPercent / 100;
-    for (const item of o.items) {
-      const baseRev = item.price * item.quantity;
-      let addonsRev = 0;
-      if (item.additionals) for (const a of item.additionals) addonsRev += a.price * a.quantity;
-
-      const baseDisc = baseRev * factor;
-      const baseNet = baseRev - baseDisc;
-
-      const prod = pMap.get(item.title);
-      if (prod) { prod.qty += item.quantity; prod.revenue += baseNet; prod.discount += baseDisc; }
-      else pMap.set(item.title, { qty: item.quantity, revenue: baseNet, discount: baseDisc });
-
-      if (item.additionals) {
-        for (const a of item.additionals) {
-          const aRev = a.price * a.quantity;
-          const aDisc = aRev * factor;
-          const aNet = aRev - aDisc;
-          const key = `${item.title}|||${a.name}`;
-          const add = aMap.get(key);
-          if (add) { add.qty += a.quantity; add.revenue += aNet; add.discount += aDisc; }
-          else aMap.set(key, { productTitle: item.title, qty: a.quantity, revenue: aNet, discount: aDisc });
-        }
-      }
-    }
+  const detail = addSheet('Pedidos',
+    ['Pedido', 'Fecha', 'Hora', 'Cliente', 'Detalle', 'Entrega', 'Pago', 'Cupon', 'Subtotal', 'Descuento', 'Envio', 'Total'],
+    [28, 14, 13, 24, 80, 12, 18, 18, 16, 16, 16, 16], orderRows,
+    ['Subtotal', 'Descuento', 'Envio', 'Total']);
+  detail.getColumn('Detalle').alignment = { wrapText: true, vertical: 'top' };
+  for (let index = 2; index <= detail.rowCount; index++) {
+    detail.getRow(index).height = Math.max(24, String(detail.getCell(`E${index}`).value).split('\n').length * 32);
   }
 
-  const groupedData: any[] = [];
-  for (const [title, data] of [...pMap.entries()].sort((a, b) => (b[1].revenue + b[1].discount) - (a[1].revenue + a[1].discount))) {
-    groupedData.push({ Producto: title, Cantidad: data.qty, Descuento: data.discount > 0 ? -data.discount : 0, Total: data.revenue });
-    for (const [key, adata] of aMap) {
-      if (key.startsWith(title + '|||')) {
-        const addonName = key.slice(title.length + 3);
-        groupedData.push({ Producto: `  + ${addonName}`, Cantidad: adata.qty, Descuento: adata.discount > 0 ? -adata.discount : 0, Total: adata.revenue });
-      }
-    }
+  addSheet('Productos',
+    ['Tipo', 'Producto', 'Concepto', 'Cantidad', 'Bruto', 'Descuento', 'Neto'],
+    [16, 32, 32, 12, 16, 16, 16], productRows,
+    ['Bruto', 'Descuento', 'Neto']);
+
+  addSheet('OTRO', ['monto', 'concepto', 'doc'], [18, 100, 18], otherRows, ['monto']);
+
+  const filename = `ventas_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  if (typeof document === 'undefined') {
+    await wb.xlsx.writeFile(filename);
+    return;
   }
-
-  const ws2 = XLSX.utils.json_to_sheet(groupedData);
-  ws2['!cols'] = [{ wch: 30 }, { wch: 12 }, { wch: 14 }, { wch: 14 }];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Agrupado');
-
-  XLSX.writeFile(wb, `ventas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  const buffer = await wb.xlsx.writeBuffer();
+  const url = URL.createObjectURL(new Blob([buffer as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
